@@ -1,0 +1,16 @@
+// Beispiel-Regeln für Cloud Firestore
+// Diese Datei ist eine Vorlage. Trage die Regeln in der Firebase Console unter
+// "Firestore" -> Reiter "Regeln" ein, um sie zu aktivieren.
+// Ändere produktive Regeln nur, wenn du genau weißt, was du tust.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Zugriff nur für eingeloggte Nutzer (Firebase Authentication)
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+  }
+}
