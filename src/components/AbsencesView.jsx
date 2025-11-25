@@ -185,6 +185,11 @@ function AbsencesView() {
 
   const [showForm, setShowForm] = useState(false);
 
+  function handlePrint() {
+    alert('Druck wird vorbereitet. Bitte wählen Sie im nächsten Schritt Ihren Drucker aus.');
+    window.print();
+  }
+
   return (
     <div className="section-root">
       <h2>Abwesenheiten-krank</h2>
@@ -201,6 +206,13 @@ function AbsencesView() {
             Neu anlegen
           </button>
         )}
+        <button
+          type="button"
+          style={{ marginLeft: '8px' }}
+          onClick={handlePrint}
+        >
+          Drucken
+        </button>
       </div>
 
       <div className="filters">
@@ -478,10 +490,10 @@ function AbsencesView() {
             <span className="traffic-light-dot traffic-light-red" /> akut ·{' '}
             <span className="traffic-light-dot traffic-light-green" /> unproblematisch
           </p>
-          <table className="data-table">
+          <table className="data-table zebra">
             <thead>
               <tr>
-                <th>Status</th>
+                <th>Ampel</th>
                 <th>Personalnr.</th>
                 <th>Art</th>
                 <th>Von</th>

@@ -87,6 +87,11 @@ function TrainingsView() {
     return list;
   }, [items, filterArchived, sortBy, sortDirection]);
 
+  function handlePrint() {
+    alert('Druck wird vorbereitet. Bitte wählen Sie im nächsten Schritt Ihren Drucker aus.');
+    window.print();
+  }
+
   const activeTraining = useMemo(
     () => items.find((i) => i.id === form.id),
     [items, form.id],
@@ -241,6 +246,13 @@ function TrainingsView() {
           }}
         >
           Neu anlegen
+        </button>
+        <button
+          type="button"
+          style={{ marginLeft: '8px' }}
+          onClick={handlePrint}
+        >
+          Drucken
         </button>
       </div>
 

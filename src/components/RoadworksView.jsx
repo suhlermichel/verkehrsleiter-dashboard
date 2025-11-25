@@ -104,6 +104,11 @@ function RoadworksView() {
     return list;
   }, [items, filterArchived, filterStatus, sortBy, sortDirection]);
 
+  function handlePrint() {
+    alert('Druck wird vorbereitet. Bitte wählen Sie im nächsten Schritt Ihren Drucker aus.');
+    window.print();
+  }
+
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((prev) => ({
@@ -293,6 +298,13 @@ function RoadworksView() {
         >
           Neu anlegen
         </button>
+        <button
+          type="button"
+          style={{ marginLeft: '8px' }}
+          onClick={handlePrint}
+        >
+          Drucken
+        </button>
       </div>
 
       <div className="filters">
@@ -360,7 +372,7 @@ function RoadworksView() {
             <table className="data-table zebra">
               <thead>
                 <tr>
-                  <th>Status</th>
+                  <th>Ampel</th>
                   <th>Titel</th>
                   <th>Ort / Lage</th>
                   <th>Betroffene Linien</th>
@@ -660,7 +672,7 @@ function RoadworksView() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Status</th>
+                <th>Ampel</th>
                 <th>Titel</th>
                 <th>Ort / Lage</th>
                 <th>Betroffene Linien</th>

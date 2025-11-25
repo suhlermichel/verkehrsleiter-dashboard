@@ -100,6 +100,11 @@ function TodosView() {
     return list;
   }, [items, filterArchived, filterDone, sortBy, sortDirection]);
 
+  function handlePrint() {
+    alert('Druck wird vorbereitet. Bitte wählen Sie im nächsten Schritt Ihren Drucker aus.');
+    window.print();
+  }
+
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({
@@ -188,6 +193,13 @@ function TodosView() {
           }}
         >
           Neu anlegen
+        </button>
+        <button
+          type="button"
+          style={{ marginLeft: '8px' }}
+          onClick={handlePrint}
+        >
+          Drucken
         </button>
       </div>
 
