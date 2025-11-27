@@ -45,6 +45,21 @@ export function mapAbsencesToEvents(absences) {
     .filter(Boolean);
 }
 
+export function mapMedicalAppointmentsToEvents(medicalAppointments) {
+  return medicalAppointments
+    .map((m) =>
+      baseEvent({
+        id: `medical-${m.id}`,
+        title: m.personalNumber ? `Betriebsarzt: ${m.personalNumber}` : 'Termin Betriebsarzt',
+        start: m.date,
+        end: m.date,
+        type: 'medical',
+        source: m,
+      }),
+    )
+    .filter(Boolean);
+}
+
 export function mapAppointmentsToEvents(appointments) {
   return appointments
     .map((a) =>
@@ -111,9 +126,18 @@ export function mapCharterTripsToEvents(trips) {
     .map((t) =>
       baseEvent({
         id: `charter-${t.id}`,
-        title: t.label ? `Fahrt: ${t.label}` : 'Gelegenheitsfahrt',
+        // Version 1.7: Ort/Ziel und ggf. Fahrzeugart im Titel anzeigen und
+        // bei gesetztem Rückfahrtdatum einen Spann von Hin- bis Rückfahrt darstellen.
+        title: (() => {
+          const parts = [];
+          if (t.label) parts.push(t.label);
+          if (t.destination) parts.push(t.destination);
+          if (t.vehicleType) parts.push(t.vehicleType);
+          const base = parts.join(' • ');
+          return base ? `Fahrt: ${base}` : 'Gelegenheitsfahrt';
+        })(),
         start: t.date,
-        end: t.date,
+        end: t.returnDate || t.date,
         type: 'charter',
         source: t,
       }),

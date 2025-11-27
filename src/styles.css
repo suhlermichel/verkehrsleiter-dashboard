@@ -7,7 +7,8 @@
 
 .app-header {
   padding: 16px 24px;
-  background: linear-gradient(90deg, #0f766e, #0ea5e9);
+  /* Version 1.7: Einheitlicher blauer Header ohne Verlauf */
+  background: #0ea5e9;
   color: white;
 }
 
@@ -36,7 +37,10 @@
 
 .dashboard-tiles {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* Version 1.7: Kacheln etwas schmaler und flexibler machen, damit
+   * zusätzliche Kacheln (z.B. Termine Betriebsarzt, Notices) nebeneinander
+   * Platz finden. */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   padding: 16px 24px 8px;
   background: #e0f2fe;
@@ -280,24 +284,41 @@
   padding: 16px 18px 18px;
 }
 
+/* Version 1.7: Formularbereiche bewusst über schwebenden Tabellen-Menüs platzieren,
+ * damit 3-Punkte-Menüs keine Formularfelder blockieren, falls sie sich doch überlappen. */
+.form-section {
+  position: relative;
+  z-index: 10;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
   background: white;
   font-size: 13px;
   border-radius: 10px;
-  overflow: hidden;
+  /* Version 1.7: overflow auf visible setzen, damit 3-Punkte-Menüs
+   * (RowActionsMenu) nicht am Tabellenrand abgeschnitten werden. */
+  overflow: visible;
 }
 
 .data-table th,
 .data-table td {
   border: 1px solid #cbd5e1;
   padding: 6px 8px;
-  text-align: left;
+  text-align: center; /* Version 1.7: Standardmäßig alle Tabellenzellen zentrieren */
+  vertical-align: middle;
 }
 
 .data-table th {
   background: #e0f2fe;
+}
+
+/* Für Zellen mit längeren Texten (z.B. Notizen/Beschreibung) kann
+ * optional eine linksbündige Ausrichtung verwendet werden. */
+.data-table td.notes-cell,
+.data-table td.description-cell {
+  text-align: left;
 }
 
 .archived-row {
@@ -657,4 +678,45 @@ button:hover {
 .attachment-actions {
   display: flex;
   gap: 4px;
+}
+
+/* 3-Punkte-Aktionsmenü in Tabellenzeilen (RowActionsMenu) */
+.row-actions-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.row-actions-trigger {
+  padding: 2px 8px;
+  min-width: 0;
+}
+
+.row-actions-dropdown {
+  position: absolute;
+  /* Version 1.7: Dropdown nach links öffnen, damit es nicht in den
+   * Formularbereich hineinragt. */
+  right: 100%;
+  top: 0;
+  margin-right: 4px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+  padding: 4px;
+  z-index: 5; /* Formularbereiche liegen bewusst darüber (siehe .form-section) */
+  min-width: 140px;
+}
+
+.row-actions-dropdown button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #0f172a;
+  border-radius: 6px;
+  border: none;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.row-actions-dropdown button:hover {
+  background: #e5e7eb;
 }

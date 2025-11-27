@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AbsencesView from './components/AbsencesView.jsx';
 import RoadworksView from './components/RoadworksView.jsx';
 import CharterTripsView from './components/CharterTripsView.jsx';
 import CalendarView from './components/CalendarView.jsx';
 import DashboardTiles from './components/DashboardTiles.jsx';
 import AppointmentsView from './components/AppointmentsView.jsx';
+import MedicalAppointmentsView from './components/MedicalAppointmentsView.jsx';
+import NoticesView from './components/NoticesView.jsx';
 import TodosView from './components/TodosView.jsx';
 import TrainingsView from './components/TrainingsView.jsx';
 import UserManagementView from './components/UserManagementView.jsx';
@@ -13,8 +15,24 @@ import LoginView from './components/LoginView.jsx';
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx';
 
 function AppShell() {
-  const [activeTab, setActiveTab] = useState('calendar');
+  // Version 1.7: Zuletzt aktiven Reiter im localStorage merken,
+  // damit nach einem Reload nicht immer der Kalender startet.
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return window.localStorage.getItem('active_tab') || 'calendar';
+    } catch {
+      return 'calendar';
+    }
+  });
   const { firebaseUser, role, canView, signOut, loading } = useAuth();
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('active_tab', activeTab);
+    } catch {
+      // Ignorieren, falls localStorage nicht verfügbar ist.
+    }
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -22,7 +40,7 @@ function AppShell() {
         <header className="app-header">
           <div className="app-header-main">
             <div>
-              <h1>SNG-Verkehrsleitung Dashboard (Version 1.6)</h1>
+              <h1>SNG-Verkehrsleitung Dashboard (Version 1.7)</h1>
               <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
             </div>
           </div>
@@ -40,7 +58,7 @@ function AppShell() {
         <header className="app-header">
           <div className="app-header-main">
             <div>
-              <h1>SNG-Verkehrsleitung Dashboard (Version 1.4)</h1>
+              <h1>SNG-Verkehrsleitung Dashboard (Version 1.7)</h1>
               <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
             </div>
           </div>
@@ -57,7 +75,7 @@ function AppShell() {
       <header className="app-header">
         <div className="app-header-main">
           <div>
-            <h1>SNG-Verkehrsleitung Dashboard (Version 1.4)</h1>
+            <h1>SNG-Verkehrsleitung Dashboard (Version 1.7)</h1>
             <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -111,6 +129,22 @@ function AppShell() {
             Termine
           </button>
         )}
+        {canView('medicalAppointments') && (
+          <button
+            className={activeTab === 'medicalAppointments' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('medicalAppointments')}
+          >
+            Termine Betriebsarzt
+          </button>
+        )}
+        {canView('notices') && (
+          <button
+            className={activeTab === 'notices' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('notices')}
+          >
+            Dienstanweisungen & Aushänge
+          </button>
+        )}
         {canView('todos') && (
           <button
             className={activeTab === 'todos' ? 'tab active' : 'tab'}
@@ -151,6 +185,10 @@ function AppShell() {
         {activeTab === 'charter' && canView('charter') && <CharterTripsView />}
         {activeTab === 'calendar' && <CalendarView />}
         {activeTab === 'appointments' && canView('appointments') && <AppointmentsView />}
+      {activeTab === 'medicalAppointments' && canView('medicalAppointments') && (
+        <MedicalAppointmentsView />
+      )}
+      {activeTab === 'notices' && canView('notices') && <NoticesView />}
         {activeTab === 'todos' && canView('todos') && <TodosView />}
         {activeTab === 'trainings' && canView('trainings') && <TrainingsView />}
         {activeTab === 'assistant' && role === 'admin' && <KiAssistantView />}

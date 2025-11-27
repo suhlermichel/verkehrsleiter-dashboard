@@ -8,50 +8,52 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase.js';
-import { getTrafficLightForAppointment, trafficLightClass } from '../utils/trafficLight.js';
-import { deleteDocument } from '../utils/deleteDocument.js'; // Version 1.7: zentrale Löschfunktion für Termine
+import { deleteDocument } from '../utils/deleteDocument.js'; // Version 1.7: zentrale Löschfunktion für Betriebsarzt-Termine
 import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Version 1.7: Sortierzustand pro Tab merken
 import RowActionsMenu from './RowActionsMenu.jsx'; // Version 1.7: 3-Punkte-Menü für Zeilenaktionen
 
 function formatDate(value) {
   if (!value) return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}.${month}.${year}`;
+  // Erwartetes Format aus dem Formular ist "YYYY-MM-DD".
+  // Wir formatieren rein über String-Operationen, um Zeitzonenprobleme
+  // (Verschiebung um einen Tag) zu vermeiden.
+  const full = String(value);
+  const str = full.includes('T') ? full.split('T')[0] : full;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [year, month, day] = str.split('-');
+    return `${day}.${month}.${year}`;
+  }
+  return value;
 }
 
 function emptyForm() {
   return {
     id: null,
-    title: '',
-    location: '',
     date: '',
-    timeFrom: '',
-    timeTo: '',
+    time: '',
+    personalNumber: '',
+    location: '',
     notes: '',
     archived: false,
   };
 }
 
-function AppointmentsView() {
+function MedicalAppointmentsView() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [form, setForm] = useState(emptyForm());
   const [filterArchived, setFilterArchived] = useState('active');
-  // Version 1.7: Sortierzustand pro Reiter (Termine) in localStorage merken
+  // Version 1.7: Sortierzustand pro Reiter (Termine Betriebsarzt) in localStorage merken
   const { sortBy, sortDirection, setSortBy, setSortDirection } = usePersistentSort(
-    'sort_appointments',
+    'sort_medicalAppointments',
     'date',
     'asc',
   );
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    const colRef = collection(db, 'appointments');
+    const colRef = collection(db, 'medicalAppointments');
     const unsubscribe = onSnapshot(
       colRef,
       (snapshot) => {
@@ -60,7 +62,7 @@ function AppointmentsView() {
         setLoading(false);
       },
       (err) => {
-        setError('Fehler beim Laden der Termine: ' + err.message);
+        setError('Fehler beim Laden der Betriebsarzt-Termine: ' + err.message);
         setLoading(false);
       },
     );
@@ -79,8 +81,8 @@ function AppointmentsView() {
 
     list.sort((a, b) => {
       const dir = sortDirection === 'asc' ? 1 : -1;
-      if (sortBy === 'title') {
-        return (a.title || '').localeCompare(b.title || '') * dir;
+      if (sortBy === 'personalNumber') {
+        return (a.personalNumber || '').localeCompare(b.personalNumber || '') * dir;
       }
       if (sortBy === 'location') {
         return (a.location || '').localeCompare(b.location || '') * dir;
@@ -92,11 +94,6 @@ function AppointmentsView() {
 
     return list;
   }, [items, filterArchived, sortBy, sortDirection]);
-
-  function handlePrint() {
-    alert('Druck wird vorbereitet. Bitte wählen Sie im nächsten Schritt Ihren Drucker aus.');
-    window.print();
-  }
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -110,28 +107,27 @@ function AppointmentsView() {
     e.preventDefault();
     setError('');
 
-    if (!form.title || !form.date || !form.timeFrom) {
-      setError('Bitte mindestens Titel, Datum und Startzeit ausfüllen.');
+    if (!form.date || !form.time || !form.personalNumber) {
+      setError('Bitte mindestens Datum, Uhrzeit und Personalnummer ausfüllen.');
       return;
     }
 
     try {
       const payload = {
-        title: form.title,
-        location: form.location || '',
         date: form.date,
-        timeFrom: form.timeFrom,
-        timeTo: form.timeTo || '',
+        time: form.time,
+        personalNumber: form.personalNumber,
+        location: form.location || '',
         notes: form.notes || '',
         archived: form.archived || false,
         updatedAt: serverTimestamp(),
       };
 
       if (form.id) {
-        const ref = doc(db, 'appointments', form.id);
+        const ref = doc(db, 'medicalAppointments', form.id);
         await updateDoc(ref, payload);
       } else {
-        await addDoc(collection(db, 'appointments'), payload);
+        await addDoc(collection(db, 'medicalAppointments'), payload);
       }
 
       setForm(emptyForm());
@@ -144,11 +140,10 @@ function AppointmentsView() {
   function handleEdit(item) {
     setForm({
       id: item.id,
-      title: item.title || '',
-      location: item.location || '',
       date: item.date || '',
-      timeFrom: item.timeFrom || '',
-      timeTo: item.timeTo || '',
+      time: item.time || '',
+      personalNumber: item.personalNumber || '',
+      location: item.location || '',
       notes: item.notes || '',
       archived: !!item.archived,
     });
@@ -157,19 +152,17 @@ function AppointmentsView() {
 
   async function toggleArchive(item) {
     try {
-      const ref = doc(db, 'appointments', item.id);
+      const ref = doc(db, 'medicalAppointments', item.id);
       await updateDoc(ref, { archived: !item.archived, updatedAt: serverTimestamp() });
     } catch (err) {
       setError('Fehler beim Aktualisieren des Archiv-Status: ' + err.message);
     }
   }
 
-  // Version 1.7: Hard Delete über zentrale deleteDocument-Hilfsfunktion.
-  // Hinweis: Für Termine kann eine Archivierung oft sinnvoller sein
-  // als ein vollständiger Hard Delete. Die Löschfunktion bleibt dennoch verfügbar.
+  // Hard Delete über zentrale deleteDocument-Hilfsfunktion.
   async function handleDelete(item) {
     try {
-      await deleteDocument('appointments', item.id);
+      await deleteDocument('medicalAppointments', item.id);
     } catch (err) {
       setError('Fehler beim Löschen: ' + err.message);
     }
@@ -177,7 +170,7 @@ function AppointmentsView() {
 
   return (
     <div className="section-root">
-      <h2>Termine</h2>
+      <h2>Termine Betriebsarzt</h2>
 
       <div style={{ marginBottom: '8px' }}>
         <button
@@ -188,13 +181,6 @@ function AppointmentsView() {
           }}
         >
           Neu anlegen
-        </button>
-        <button
-          type="button"
-          style={{ marginLeft: '8px' }}
-          onClick={handlePrint}
-        >
-          Drucken
         </button>
       </div>
 
@@ -218,7 +204,7 @@ function AppointmentsView() {
             Sortieren nach:
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
               <option value="date">Datum</option>
-              <option value="title">Titel</option>
+              <option value="personalNumber">Personalnummer</option>
               <option value="location">Ort</option>
             </select>
           </label>
@@ -235,26 +221,21 @@ function AppointmentsView() {
         </div>
       </div>
 
-      {loading && <p>Lade Termine...</p>}
+      {loading && <p>Lade Termine Betriebsarzt...</p>}
       {error && <p className="error-text">{error}</p>}
 
       {showForm ? (
         <div className="list-and-form">
           <section className="list-section">
             <h3>Übersicht</h3>
-            <p>
-              <span className="traffic-light-dot traffic-light-red" /> akut ·{' '}
-              <span className="traffic-light-dot traffic-light-green" /> unproblematisch
-            </p>
             <table className="data-table zebra">
               <thead>
                 <tr>
-                  <th>Status</th>
-                  <th>Titel</th>
-                  <th>Ort</th>
                   <th>Datum</th>
-                  <th>Zeit</th>
-                  <th>Notizen</th>
+                  <th>Uhrzeit</th>
+                  <th>Personalnummer</th>
+                  <th>Ort</th>
+                  <th>Bemerkung</th>
                   <th>Archiv</th>
                   <th>Aktionen</th>
                 </tr>
@@ -262,23 +243,10 @@ function AppointmentsView() {
               <tbody>
                 {filteredAndSorted.map((item) => (
                   <tr key={item.id} className={item.archived ? 'archived-row' : ''}>
-                    <td>
-                      {(() => {
-                        const color = getTrafficLightForAppointment(item);
-                        const title =
-                          color === 'red'
-                            ? 'akut'
-                            : 'unproblematisch';
-                        return <span className={trafficLightClass(color)} title={title} />;
-                      })()}
-                    </td>
-                    <td>{item.title}</td>
-                    <td>{item.location}</td>
                     <td>{formatDate(item.date)}</td>
-                    <td>
-                      {item.timeFrom}
-                      {item.timeTo ? ` - ${item.timeTo}` : ''}
-                    </td>
+                    <td>{item.time}</td>
+                    <td>{item.personalNumber}</td>
+                    <td>{item.location}</td>
                     <td className="notes-cell">{item.notes}</td>
                     <td>{item.archived ? 'Ja' : 'Nein'}</td>
                     <td>
@@ -293,7 +261,7 @@ function AppointmentsView() {
                 ))}
                 {!loading && filteredAndSorted.length === 0 && (
                   <tr>
-                    <td colSpan={8}>Keine Einträge gefunden.</td>
+                    <td colSpan={7}>Keine Einträge vorhanden.</td>
                   </tr>
                 )}
               </tbody>
@@ -301,115 +269,99 @@ function AppointmentsView() {
           </section>
 
           <section className="form-section">
-          <h3>{form.id ? 'Eintrag bearbeiten' : 'Neu anlegen'}</h3>
-          <form onSubmit={handleSubmit} className="data-form">
-            <label>
-              Titel*
-              <input
-                name="title"
-                type="text"
-                value={form.title}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Ort
-              <input
-                name="location"
-                type="text"
-                value={form.location}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Datum*
-              <input
-                name="date"
-                type="date"
-                value={form.date}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Zeit von*
-              <input
-                name="timeFrom"
-                type="text"
-                placeholder="z.B. 09:00"
-                value={form.timeFrom}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Zeit bis
-              <input
-                name="timeTo"
-                type="text"
-                placeholder="optional, z.B. 10:30"
-                value={form.timeTo}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Notizen
-              <textarea
-                name="notes"
-                rows={3}
-                value={form.notes}
-                onChange={handleChange}
-              />
-            </label>
-            <label className="checkbox-label">
-              <input
-                name="archived"
-                type="checkbox"
-                checked={form.archived}
-                onChange={handleChange}
-              />
-              Direkt als archiviert markieren
-            </label>
+            <h3>{form.id ? 'Eintrag bearbeiten' : 'Neu anlegen'}</h3>
+            <form onSubmit={handleSubmit} className="data-form">
+              <label>
+                Datum*
+                <input
+                  name="date"
+                  type="date"
+                  value={form.date}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Uhrzeit*
+                <input
+                  name="time"
+                  type="time"
+                  value={form.time}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Personalnummer*
+                <input
+                  name="personalNumber"
+                  type="text"
+                  value={form.personalNumber}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Ort
+                <input
+                  name="location"
+                  type="text"
+                  value={form.location}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Bemerkung
+                <textarea
+                  name="notes"
+                  rows={3}
+                  value={form.notes}
+                  onChange={handleChange}
+                />
+              </label>
+              <label className="checkbox-label">
+                <input
+                  name="archived"
+                  type="checkbox"
+                  checked={form.archived}
+                  onChange={handleChange}
+                />
+                Direkt als archiviert markieren
+              </label>
 
-            <div className="form-buttons">
-              <button type="submit">
-                {form.id ? 'Speichern' : 'Anlegen'}
-              </button>
-              {form.id && (
+              <div className="form-buttons">
+                <button type="submit">
+                  {form.id ? 'Speichern' : 'Anlegen'}
+                </button>
+                {form.id && (
+                  <button
+                    type="button"
+                    onClick={() => setForm(emptyForm())}
+                  >
+                    Abbrechen / Neu
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => setForm(emptyForm())}
+                  onClick={() => {
+                    setForm(emptyForm());
+                    setShowForm(false);
+                  }}
                 >
-                  Abbrechen / Neu
+                  Schließen
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setForm(emptyForm());
-                  setShowForm(false);
-                }}
-              >
-                Schließen
-              </button>
-            </div>
-          </form>
-        </section>
-      </div>
+              </div>
+            </form>
+          </section>
+        </div>
       ) : (
         <section className="list-section">
           <h3>Übersicht</h3>
-          <p>
-            <span className="traffic-light-dot traffic-light-red" /> akut ·{' '}
-            <span className="traffic-light-dot traffic-light-green" /> unproblematisch
-          </p>
-          <table className="data-table">
+          <table className="data-table zebra">
             <thead>
               <tr>
-                <th>Status</th>
-                <th>Titel</th>
-                <th>Ort</th>
                 <th>Datum</th>
-                <th>Zeit</th>
-                <th>Notizen</th>
+                <th>Uhrzeit</th>
+                <th>Personalnummer</th>
+                <th>Ort</th>
+                <th>Bemerkung</th>
                 <th>Archiv</th>
                 <th>Aktionen</th>
               </tr>
@@ -417,27 +369,10 @@ function AppointmentsView() {
             <tbody>
               {filteredAndSorted.map((item) => (
                 <tr key={item.id} className={item.archived ? 'archived-row' : ''}>
-                  <td>
-                    {(() => {
-                      const color = getTrafficLightForAppointment(item);
-                      const title =
-                        color === 'red'
-                          ? 'akut'
-                          : color === 'yellow'
-                          ? 'bald relevant'
-                          : color === 'green'
-                          ? 'unproblematisch'
-                          : '';
-                      return <span className={trafficLightClass(color)} title={title} />;
-                    })()}
-                  </td>
-                  <td>{item.title}</td>
-                  <td>{item.location}</td>
                   <td>{formatDate(item.date)}</td>
-                  <td>
-                    {item.timeFrom}
-                    {item.timeTo ? ` - ${item.timeTo}` : ''}
-                  </td>
+                  <td>{item.time}</td>
+                  <td>{item.personalNumber}</td>
+                  <td>{item.location}</td>
                   <td className="notes-cell">{item.notes}</td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
@@ -452,7 +387,7 @@ function AppointmentsView() {
               ))}
               {!loading && filteredAndSorted.length === 0 && (
                 <tr>
-                  <td colSpan={7}>Keine Einträge gefunden.</td>
+                  <td colSpan={7}>Keine Einträge vorhanden.</td>
                 </tr>
               )}
             </tbody>
@@ -463,4 +398,4 @@ function AppointmentsView() {
   );
 }
 
-export default AppointmentsView;
+export default MedicalAppointmentsView;

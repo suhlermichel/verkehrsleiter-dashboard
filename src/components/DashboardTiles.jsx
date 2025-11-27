@@ -10,6 +10,7 @@ function DashboardTiles({ activeTab, setActiveTab }) {
     roadworks: 0,
     charterTrips: 0,
     appointments: 0,
+    medicalAppointments: 0, // Version 1.7: Termine Betriebsarzt
     todos: 0,
     trainings: 0,
   });
@@ -19,7 +20,8 @@ function DashboardTiles({ activeTab, setActiveTab }) {
       const data = snap.docs.map((d) => d.data());
       setCounts((prev) => ({
         ...prev,
-        absences: data.filter((i) => !i.archived).length,
+        // Nur Krankmeldungen (kr/kru) zählen
+        absences: data.filter((i) => !i.archived && (i.type === 'kr' || i.type === 'kru')).length,
       }));
     });
 
@@ -47,6 +49,17 @@ function DashboardTiles({ activeTab, setActiveTab }) {
       }));
     });
 
+    const unsubMedicalAppointments = onSnapshot(
+      collection(db, 'medicalAppointments'),
+      (snap) => {
+        const data = snap.docs.map((d) => d.data());
+        setCounts((prev) => ({
+          ...prev,
+          medicalAppointments: data.filter((i) => !i.archived).length,
+        }));
+      },
+    );
+
     const unsubTodos = onSnapshot(collection(db, 'todos'), (snap) => {
       const data = snap.docs.map((d) => d.data());
       setCounts((prev) => ({
@@ -68,6 +81,7 @@ function DashboardTiles({ activeTab, setActiveTab }) {
       unsubRoad();
       unsubCharter();
       unsubAppointments();
+      unsubMedicalAppointments();
       unsubTodos();
       unsubTrainings();
     };
@@ -77,93 +91,108 @@ function DashboardTiles({ activeTab, setActiveTab }) {
     <div className="dashboard-tiles">
       {canView('absences') && (
         <button
-        type="button"
-        className={
-          activeTab === 'absences'
-            ? 'dashboard-tile tile-absences tile-active'
-            : 'dashboard-tile tile-absences'
-        }
-        onClick={() => setActiveTab('absences')}
-      >
-        <div className="tile-icon">📒</div>
-        <div className="tile-number">{counts.absences}</div>
-        <div className="tile-text">Abwesenheiten (krank)</div>
-      </button>
+          type="button"
+          className={
+            activeTab === 'absences'
+              ? 'dashboard-tile tile-absences tile-active'
+              : 'dashboard-tile tile-absences'
+          }
+          onClick={() => setActiveTab('absences')}
+        >
+          <div className="tile-icon">🚦</div>
+          <div className="tile-number">{counts.absences}</div>
+          <div className="tile-text">Abwesenheiten krank</div>
+        </button>
       )}
       {canView('roadworks') && (
         <button
-        type="button"
-        className={
-          activeTab === 'roadworks'
-            ? 'dashboard-tile tile-roadworks tile-active'
-            : 'dashboard-tile tile-roadworks'
-        }
-        onClick={() => setActiveTab('roadworks')}
-      >
-        <div className="tile-icon">🚧</div>
-        <div className="tile-number">{counts.roadworks}</div>
-        <div className="tile-text">Baustellen-Alarme</div>
-      </button>
+          type="button"
+          className={
+            activeTab === 'roadworks'
+              ? 'dashboard-tile tile-roadworks tile-active'
+              : 'dashboard-tile tile-roadworks'
+          }
+          onClick={() => setActiveTab('roadworks')}
+        >
+          <div className="tile-icon">🚧</div>
+          <div className="tile-number">{counts.roadworks}</div>
+          <div className="tile-text">Baustellen</div>
+        </button>
       )}
       {canView('charter') && (
         <button
-        type="button"
-        className={
-          activeTab === 'charter'
-            ? 'dashboard-tile tile-charter tile-active'
-            : 'dashboard-tile tile-charter'
-        }
-        onClick={() => setActiveTab('charter')}
-      >
-        <div className="tile-icon">🚌</div>
-        <div className="tile-number">{counts.charterTrips}</div>
-        <div className="tile-text">Gelegenheitsfahrten</div>
-      </button>
+          type="button"
+          className={
+            activeTab === 'charter'
+              ? 'dashboard-tile tile-charter tile-active'
+              : 'dashboard-tile tile-charter'
+          }
+          onClick={() => setActiveTab('charter')}
+        >
+          <div className="tile-icon">🚌</div>
+          <div className="tile-number">{counts.charterTrips}</div>
+          <div className="tile-text">Gelegenheitsfahrten</div>
+        </button>
       )}
       {canView('appointments') && (
         <button
-        type="button"
-        className={
-          activeTab === 'appointments'
-            ? 'dashboard-tile tile-appointments tile-active'
-            : 'dashboard-tile tile-appointments'
-        }
-        onClick={() => setActiveTab('appointments')}
-      >
-        <div className="tile-icon">📅</div>
-        <div className="tile-number">{counts.appointments}</div>
-        <div className="tile-text">Wichtige Termine</div>
-      </button>
+          type="button"
+          className={
+            activeTab === 'appointments'
+              ? 'dashboard-tile tile-appointments tile-active'
+              : 'dashboard-tile tile-appointments'
+          }
+          onClick={() => setActiveTab('appointments')}
+        >
+          <div className="tile-icon">📅</div>
+          <div className="tile-number">{counts.appointments}</div>
+          <div className="tile-text">Wichtige Termine</div>
+        </button>
+      )}
+      {canView('medicalAppointments') && (
+        <button
+          type="button"
+          className={
+            activeTab === 'medicalAppointments'
+              ? 'dashboard-tile tile-appointments tile-active'
+              : 'dashboard-tile tile-appointments'
+          }
+          onClick={() => setActiveTab('medicalAppointments')}
+        >
+          <div className="tile-icon">🏥</div>
+          <div className="tile-number">{counts.medicalAppointments}</div>
+          <div className="tile-text">Termine Betriebsarzt</div>
+        </button>
       )}
       {canView('todos') && (
         <button
-        type="button"
-        className={
-          activeTab === 'todos'
-            ? 'dashboard-tile tile-todos tile-active'
-            : 'dashboard-tile tile-todos'
-        }
-        onClick={() => setActiveTab('todos')}
-      >
-        <div className="tile-icon">✅</div>
-        <div className="tile-number">{counts.todos}</div>
-        <div className="tile-text">Offene To-Dos</div>
-      </button>
+          type="button"
+          className={
+            activeTab === 'todos'
+              ? 'dashboard-tile tile-todos tile-active'
+              : 'dashboard-tile tile-todos'
+          }
+          onClick={() => setActiveTab('todos')}
+        >
+          <div className="tile-icon">✅</div>
+          <div className="tile-number">{counts.todos}</div>
+          <div className="tile-text">Offene To-Dos</div>
+        </button>
       )}
       {canView('trainings') && (
         <button
-        type="button"
-        className={
-          activeTab === 'trainings'
-            ? 'dashboard-tile tile-trainings tile-active'
-            : 'dashboard-tile tile-trainings'
-        }
-        onClick={() => setActiveTab('trainings')}
-      >
-        <div className="tile-icon">📚</div>
-        <div className="tile-number">{counts.trainings}</div>
-        <div className="tile-text">Schulungen</div>
-      </button>
+          type="button"
+          className={
+            activeTab === 'trainings'
+              ? 'dashboard-tile tile-trainings tile-active'
+              : 'dashboard-tile tile-trainings'
+          }
+          onClick={() => setActiveTab('trainings')}
+        >
+          <div className="tile-icon">📚</div>
+          <div className="tile-number">{counts.trainings}</div>
+          <div className="tile-text">Schulungen aktuell</div>
+        </button>
       )}
     </div>
   );

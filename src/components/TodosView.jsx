@@ -9,6 +9,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase.js';
 import { getTrafficLightForTodo, trafficLightClass } from '../utils/trafficLight.js';
+import { deleteDocument } from '../utils/deleteDocument.js'; // Version 1.7: zentrale Löschfunktion für To-Dos
+import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Version 1.7: Sortierzustand pro Tab merken
+import RowActionsMenu from './RowActionsMenu.jsx'; // Version 1.7: 3-Punkte-Menü für Zeilenaktionen
 
 const TODO_PRIORITIES = ['niedrig', 'normal', 'hoch'];
 
@@ -42,8 +45,12 @@ function TodosView() {
   const [form, setForm] = useState(emptyForm());
   const [filterArchived, setFilterArchived] = useState('active');
   const [filterDone, setFilterDone] = useState('all');
-  const [sortBy, setSortBy] = useState('dueDate');
-  const [sortDirection, setSortDirection] = useState('asc');
+  // Version 1.7: Sortierzustand pro Reiter (To-Dos) in localStorage merken
+  const { sortBy, sortDirection, setSortBy, setSortDirection } = usePersistentSort(
+    'sort_todos',
+    'dueDate',
+    'asc',
+  );
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
@@ -180,6 +187,16 @@ function TodosView() {
     }
   }
 
+  // Version 1.7: Hard Delete über zentrale deleteDocument-Hilfsfunktion.
+  // Hinweis: Für To-Dos reicht in vielen Fällen auch ein Archivieren statt Löschen.
+  async function handleDelete(item) {
+    try {
+      await deleteDocument('todos', item.id);
+    } catch (err) {
+      setError('Fehler beim Löschen: ' + err.message);
+    }
+  }
+
   return (
     <div className="section-root">
       <h2>To-Dos</h2>
@@ -305,12 +322,12 @@ function TodosView() {
                     </td>
                     <td>{item.archived ? 'Ja' : 'Nein'}</td>
                     <td>
-                      <button type="button" onClick={() => handleEdit(item)}>
-                        Bearbeiten
-                      </button>
-                      <button type="button" onClick={() => toggleArchive(item)}>
-                        {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                      </button>
+                      <RowActionsMenu
+                        onEdit={() => handleEdit(item)}
+                        onArchive={() => toggleArchive(item)}
+                        onDelete={() => handleDelete(item)}
+                        archived={!!item.archived}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -471,12 +488,12 @@ function TodosView() {
                   </td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
-                    <button type="button" onClick={() => handleEdit(item)}>
-                      Bearbeiten
-                    </button>
-                    <button type="button" onClick={() => toggleArchive(item)}>
-                      {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                    </button>
+                    <RowActionsMenu
+                      onEdit={() => handleEdit(item)}
+                      onArchive={() => toggleArchive(item)}
+                      onDelete={() => handleDelete(item)}
+                      archived={!!item.archived}
+                    />
                   </td>
                 </tr>
               ))}

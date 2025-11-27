@@ -11,6 +11,9 @@ import { db, storage } from '../firebase.js';
 import { getTrafficLightForCharterTrip, trafficLightClass } from '../utils/trafficLight.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { validateFile, createAttachmentMetadata } from '../utils/attachments.js';
+import { deleteDocument } from '../utils/deleteDocument.js'; // Version 1.7: zentrale Löschfunktion für Gelegenheitsfahrten
+import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Version 1.7: Sortierzustand pro Tab merken
+import RowActionsMenu from './RowActionsMenu.jsx'; // Version 1.7: 3-Punkte-Menü für Zeilenaktionen
 
 const TRIP_STATUS = ['angefragt', 'angebot', 'gebucht', 'durchgeführt'];
 
@@ -28,10 +31,13 @@ function emptyForm() {
   return {
     id: null,
     label: '',
+    destination: '', // Version 1.7: Ort/Ziel der Fahrt
     date: '',
     outboundTime: '',
     returnTime: '',
+    returnDate: '', // Version 1.7: Rückfahrtdatum (falls abweichend)
     passengerCount: '',
+    vehicleType: '', // Version 1.7: Art des Fahrzeugs
     status: 'angefragt',
     notes: '',
     archived: false,
@@ -45,8 +51,12 @@ function CharterTripsView() {
   const [form, setForm] = useState(emptyForm());
   const [filterArchived, setFilterArchived] = useState('active');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortDirection, setSortDirection] = useState('asc');
+  // Version 1.7: Sortierzustand pro Reiter (Gelegenheitsfahrten) in localStorage merken
+  const { sortBy, sortDirection, setSortBy, setSortDirection } = usePersistentSort(
+    'sort_charterTrips',
+    'date',
+    'asc',
+  );
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -125,10 +135,13 @@ function CharterTripsView() {
     try {
       const payload = {
         label: form.label,
+        destination: form.destination || '',
         date: form.date,
         outboundTime: form.outboundTime || '',
         returnTime: form.returnTime || '',
+        returnDate: form.returnDate || '',
         passengerCount: form.passengerCount ? Number(form.passengerCount) : null,
+        vehicleType: form.vehicleType || '',
         status: form.status,
         notes: form.notes || '',
         archived: form.archived || false,
@@ -227,13 +240,16 @@ function CharterTripsView() {
     setForm({
       id: item.id,
       label: item.label || '',
+      destination: item.destination || '',
       date: item.date || '',
       outboundTime: item.outboundTime || '',
       returnTime: item.returnTime || '',
+      returnDate: item.returnDate || '',
       passengerCount:
         typeof item.passengerCount === 'number'
           ? String(item.passengerCount)
           : item.passengerCount || '',
+      vehicleType: item.vehicleType || '',
       status: item.status || 'angefragt',
       notes: item.notes || '',
       archived: !!item.archived,
@@ -247,6 +263,17 @@ function CharterTripsView() {
       await updateDoc(ref, { archived: !item.archived, updatedAt: serverTimestamp() });
     } catch (err) {
       setError('Fehler beim Aktualisieren des Archiv-Status: ' + err.message);
+    }
+  }
+
+  // Version 1.7: Hard Delete über zentrale deleteDocument-Hilfsfunktion.
+  // Hinweis: Auch bei Gelegenheitsfahrten kann Archivierung oft sinnvoller sein
+  // als ein vollständiger Hard Delete. Die Löschfunktion bleibt dennoch verfügbar.
+  async function handleDelete(item) {
+    try {
+      await deleteDocument('charterTrips', item.id);
+    } catch (err) {
+      setError('Fehler beim Löschen: ' + err.message);
     }
   }
 
@@ -340,10 +367,13 @@ function CharterTripsView() {
               <tr>
                 <th>Ampel</th>
                 <th>Bezeichnung</th>
-                <th>Datum</th>
+                <th>Ort / Ziel</th>
+                <th>Hinfahrt</th>
+                <th>Rückfahrt</th>
                 <th>Uhrzeit Hinfahrt</th>
                 <th>Uhrzeit Rückfahrt</th>
                 <th>Anzahl Personen</th>
+                <th>Fahrzeugart</th>
                 <th>Status</th>
                 <th>Notizen</th>
                 <th>Archiv</th>
@@ -369,12 +399,15 @@ function CharterTripsView() {
                     })()}
                   </td>
                   <td>{item.label}</td>
+                  <td>{item.destination}</td>
                   <td>{formatDate(item.date)}</td>
+                  <td>{formatDate(item.returnDate)}</td>
                   <td>{item.outboundTime}</td>
                   <td>{item.returnTime}</td>
                   <td>{item.passengerCount ?? ''}</td>
+                  <td>{item.vehicleType}</td>
                   <td>{item.status}</td>
-                  <td>{item.notes}</td>
+                  <td className="notes-cell">{item.notes}</td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
                     {(item.attachments || []).length === 0 && '–'}
@@ -395,18 +428,12 @@ function CharterTripsView() {
                     )}
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleArchive(item)}
-                    >
-                      {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                    </button>
+                    <RowActionsMenu
+                      onEdit={() => handleEdit(item)}
+                      onArchive={() => toggleArchive(item)}
+                      onDelete={() => handleDelete(item)}
+                      archived={!!item.archived}
+                    />
                   </td>
                 </tr>
               ))}
@@ -432,11 +459,29 @@ function CharterTripsView() {
               />
             </label>
             <label>
+              Ort / Ziel
+              <input
+                name="destination"
+                type="text"
+                value={form.destination}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
               Datum der Fahrt*
               <input
                 name="date"
                 type="date"
                 value={form.date}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Rückfahrtdatum (falls abweichend)
+              <input
+                name="returnDate"
+                type="date"
+                value={form.returnDate}
                 onChange={handleChange}
               />
             </label>
@@ -467,6 +512,16 @@ function CharterTripsView() {
                 type="number"
                 min="0"
                 value={form.passengerCount}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Fahrzeugart
+              <input
+                name="vehicleType"
+                type="text"
+                placeholder="z.B. Standardbus, Reisebus, Mini-Bus"
+                value={form.vehicleType}
                 onChange={handleChange}
               />
             </label>
@@ -568,10 +623,13 @@ function CharterTripsView() {
               <tr>
                 <th>Ampel</th>
                 <th>Bezeichnung</th>
-                <th>Datum</th>
+                <th>Ort / Ziel</th>
+                <th>Hinfahrt</th>
+                <th>Rückfahrt</th>
                 <th>Uhrzeit Hinfahrt</th>
                 <th>Uhrzeit Rückfahrt</th>
                 <th>Anzahl Personen</th>
+                <th>Fahrzeugart</th>
                 <th>Status</th>
                 <th>Notizen</th>
                 <th>Archiv</th>
@@ -597,12 +655,15 @@ function CharterTripsView() {
                     })()}
                   </td>
                   <td>{item.label}</td>
+                  <td>{item.destination}</td>
                   <td>{formatDate(item.date)}</td>
+                  <td>{formatDate(item.returnDate)}</td>
                   <td>{item.outboundTime}</td>
                   <td>{item.returnTime}</td>
                   <td>{item.passengerCount ?? ''}</td>
+                  <td>{item.vehicleType}</td>
                   <td>{item.status}</td>
-                  <td>{item.notes}</td>
+                  <td className="notes-cell">{item.notes}</td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
                     {(item.attachments || []).length === 0 && '–'}
@@ -623,18 +684,12 @@ function CharterTripsView() {
                     )}
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleArchive(item)}
-                    >
-                      {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                    </button>
+                    <RowActionsMenu
+                      onEdit={() => handleEdit(item)}
+                      onArchive={() => toggleArchive(item)}
+                      onDelete={() => handleDelete(item)}
+                      archived={!!item.archived}
+                    />
                   </td>
                 </tr>
               ))}

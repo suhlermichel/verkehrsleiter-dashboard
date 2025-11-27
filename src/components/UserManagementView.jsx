@@ -30,9 +30,34 @@ const EMPTY_PERMISSIONS = {
   roadworks: { view: true, edit: false },
   charter: { view: true, edit: false },
   appointments: { view: true, edit: false },
+  medicalAppointments: { view: true, edit: false },
+  notices: { view: true, edit: false },
   todos: { view: true, edit: false },
   trainings: { view: true, edit: false },
 };
+
+function labelForArea(area) {
+  switch (area) {
+    case 'absences':
+      return 'Abwesenheiten';
+    case 'roadworks':
+      return 'Baustellen';
+    case 'charter':
+      return 'Gelegenheitsfahrten';
+    case 'appointments':
+      return 'Wichtige Termine';
+    case 'medicalAppointments':
+      return 'Termine Betriebsarzt';
+    case 'notices':
+      return 'Dienstanweisungen & Aushänge';
+    case 'todos':
+      return 'To-Dos';
+    case 'trainings':
+      return 'Schulungen';
+    default:
+      return area;
+  }
+}
 
 function generateRandomPassword() {
   return (
@@ -250,12 +275,21 @@ function UserManagementView() {
                   </td>
                   <td>
                     <div className="permissions-grid">
-                      {['absences', 'roadworks', 'charter', 'appointments', 'todos', 'trainings'].map(
+                      {[
+                        'absences',
+                        'roadworks',
+                        'charter',
+                        'appointments',
+                        'medicalAppointments',
+                        'notices',
+                        'todos',
+                        'trainings',
+                      ].map(
                         (area) => {
                           const p = (u.permissions || {})[area] || { view: true, edit: false };
                           return (
                             <div key={area} className="permission-row">
-                              <span className="permission-label">{area}</span>
+                              <span className="permission-label">{labelForArea(area)}</span>
                               <label>
                                 <input
                                   type="checkbox"

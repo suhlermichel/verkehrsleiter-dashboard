@@ -10,6 +10,9 @@ import {
 import { db } from '../firebase.js';
 import { getTrafficLightForAbsence, trafficLightClass } from '../utils/trafficLight.js';
 import { useAuth } from '../auth/AuthContext.jsx';
+import { deleteDocument } from '../utils/deleteDocument.js'; // Version 1.7: zentrale Löschfunktion
+import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Version 1.7: Sortierzustand pro Tab merken
+import RowActionsMenu from './RowActionsMenu.jsx'; // Version 1.7: 3-Punkte-Menü für Zeilenaktionen
 
 const ABSENCE_TYPES = ['kr', 'kru'];
 const ABSENCE_STATUS = ['eingetragen', 'verlängert'];
@@ -50,8 +53,12 @@ function AbsencesView() {
   const [filterArchived, setFilterArchived] = useState('active');
   const [filterType, setFilterType] = useState('all');
   const [filterTraffic, setFilterTraffic] = useState('all'); // all | red | green
-  const [sortBy, setSortBy] = useState('startDate');
-  const [sortDirection, setSortDirection] = useState('asc');
+  // Version 1.7: Sortierzustand pro Reiter (Abwesenheiten) in localStorage merken
+  const { sortBy, sortDirection, setSortBy, setSortDirection } = usePersistentSort(
+    'sort_absences',
+    'startDate',
+    'asc',
+  );
 
   useEffect(() => {
     const colRef = collection(db, 'absences');
@@ -184,6 +191,15 @@ function AbsencesView() {
   }
 
   const [showForm, setShowForm] = useState(false);
+
+  // Version 1.7: Hard Delete über zentrale deleteDocument-Hilfsfunktion
+  async function handleDelete(item) {
+    try {
+      await deleteDocument('absences', item.id);
+    } catch (err) {
+      setError('Fehler beim Löschen: ' + err.message);
+    }
+  }
 
   function handlePrint() {
     alert('Druck wird vorbereitet. Bitte wählen Sie im nächsten Schritt Ihren Drucker aus.');
@@ -327,28 +343,55 @@ function AbsencesView() {
                     <td>{item.type}</td>
                     <td>{formatDate(item.startDate)}</td>
                     <td>{formatDate(item.endDate)}</td>
-                    <td>{item.hasPaperCertificate ? 'Ja' : 'Nein'}</td>
+                    <td
+                      style={item.hasPaperCertificate ? {} : { color: 'red' }}
+                      title={
+                        item.hasPaperCertificate
+                          ? undefined
+                          : 'Es liegt kein Krankenschein im Papierformat vor.'
+                      }
+                    >
+                      {item.hasPaperCertificate ? 'Ja' : 'Nein'}
+                    </td>
                     <td>{item.status}</td>
-                    <td>{formatDate(item.enteredUntil)}</td>
+                    <td
+                      className="perdis-until-cell"
+                      style={(() => {
+                        // Version 1.7: Perdis-Abweichungslogik
+                        // Wenn Krank-Fall (kr/kru) UND enteredUntil gesetzt UND
+                        // enteredUntil vom Enddatum abweicht, Schrift in ROT darstellen.
+                        const isSick = item.type === 'kr' || item.type === 'kru';
+                        const hasEntered = !!item.enteredUntil;
+                        const differs =
+                          item.enteredUntil && item.endDate && item.enteredUntil !== item.endDate;
+                        if (isSick && hasEntered && differs) {
+                          return { color: 'red' };
+                        }
+                        return {};
+                      })()}
+                      title={(() => {
+                        const isSick = item.type === 'kr' || item.type === 'kru';
+                        const hasEntered = !!item.enteredUntil;
+                        const differs =
+                          item.enteredUntil && item.endDate && item.enteredUntil !== item.endDate;
+                        return isSick && hasEntered && differs
+                          ? 'Eintragung in PERDIS weicht vom Ende des Krankenscheins ab.'
+                          : undefined;
+                      })()}
+                    >
+                      {formatDate(item.enteredUntil)}
+                    </td>
                     <td>{formatDate(item.returnDate)}</td>
-                    <td>{item.notes}</td>
+                    <td className="notes-cell">{item.notes}</td>
                     <td>{item.archived ? 'Ja' : 'Nein'}</td>
                     <td>
                       {canEditAbsences && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(item)}
-                          >
-                            Bearbeiten
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => toggleArchive(item)}
-                          >
-                            {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                          </button>
-                        </>
+                        <RowActionsMenu
+                          onEdit={() => handleEdit(item)}
+                          onArchive={() => toggleArchive(item)}
+                          onDelete={() => handleDelete(item)}
+                          archived={!!item.archived}
+                        />
                       )}
                     </td>
                   </tr>
@@ -528,25 +571,54 @@ function AbsencesView() {
                   <td>{item.type}</td>
                   <td>{formatDate(item.startDate)}</td>
                   <td>{formatDate(item.endDate)}</td>
-                  <td>{item.hasPaperCertificate ? 'Ja' : 'Nein'}</td>
+                  <td
+                    style={item.hasPaperCertificate ? {} : { color: 'red' }}
+                    title={
+                      item.hasPaperCertificate
+                        ? undefined
+                        : 'Es liegt kein Krankenschein im Papierformat vor.'
+                    }
+                  >
+                    {item.hasPaperCertificate ? 'Ja' : 'Nein'}
+                  </td>
                   <td>{item.status}</td>
-                  <td>{formatDate(item.enteredUntil)}</td>
+                  <td
+                    className="perdis-until-cell"
+                    style={(() => {
+                      // Version 1.7: Perdis-Abweichungslogik (siehe Erklärung weiter oben).
+                      const isSick = item.type === 'kr' || item.type === 'kru';
+                      const hasEntered = !!item.enteredUntil;
+                      const differs =
+                        item.enteredUntil && item.endDate && item.enteredUntil !== item.endDate;
+                      if (isSick && hasEntered && differs) {
+                        return { color: 'red' };
+                      }
+                      return {};
+                    })()}
+                    title={(() => {
+                      const isSick = item.type === 'kr' || item.type === 'kru';
+                      const hasEntered = !!item.enteredUntil;
+                      const differs =
+                        item.enteredUntil && item.endDate && item.enteredUntil !== item.endDate;
+                      return isSick && hasEntered && differs
+                        ? 'Eintragung in PERDIS weicht vom Ende des Krankenscheins ab.'
+                        : undefined;
+                    })()}
+                  >
+                    {formatDate(item.enteredUntil)}
+                  </td>
                   <td>{formatDate(item.returnDate)}</td>
-                  <td>{item.notes}</td>
+                  <td className="notes-cell">{item.notes}</td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleArchive(item)}
-                    >
-                      {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                    </button>
+                    {canEditAbsences && (
+                      <RowActionsMenu
+                        onEdit={() => handleEdit(item)}
+                        onArchive={() => toggleArchive(item)}
+                        onDelete={() => handleDelete(item)}
+                        archived={!!item.archived}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}

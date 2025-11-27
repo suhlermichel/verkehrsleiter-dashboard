@@ -11,6 +11,9 @@ import { db, storage } from '../firebase.js';
 import { getTrafficLightForRoadwork, trafficLightClass } from '../utils/trafficLight.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { validateFile, createAttachmentMetadata } from '../utils/attachments.js';
+import { deleteDocument } from '../utils/deleteDocument.js'; // Version 1.7: zentrale Löschfunktion für Baustellen
+import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Version 1.7: Sortierzustand pro Tab merken
+import RowActionsMenu from './RowActionsMenu.jsx'; // Version 1.7: 3-Punkte-Menü für Zeilenaktionen
 
 const ROADWORK_STATUS = ['angekündigt', 'läuft', 'endet bald', 'beendet'];
 
@@ -54,8 +57,12 @@ function RoadworksView() {
   const [form, setForm] = useState(emptyForm());
   const [filterArchived, setFilterArchived] = useState('active');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('startDate');
-  const [sortDirection, setSortDirection] = useState('asc');
+  // Version 1.7: Sortierzustand pro Reiter (Baustellen) in localStorage merken
+  const { sortBy, sortDirection, setSortBy, setSortDirection } = usePersistentSort(
+    'sort_roadworks',
+    'startDate',
+    'asc',
+  );
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -284,6 +291,17 @@ function RoadworksView() {
     }
   }
 
+  // Version 1.7: Hard Delete über zentrale deleteDocument-Hilfsfunktion.
+  // Hinweis: Für Baustellen ist eine dokumentierte Archivierung häufig sinnvoller
+  // als ein Hard Delete. Die Löschfunktion bleibt dennoch verfügbar.
+  async function handleDelete(item) {
+    try {
+      await deleteDocument('roadworks', item.id);
+    } catch (err) {
+      setError('Fehler beim Löschen: ' + err.message);
+    }
+  }
+
   return (
     <div className="section-root">
       <h2>Baustellen / Sperrungen</h2>
@@ -423,7 +441,7 @@ function RoadworksView() {
                         return labels.join(', ');
                       })()}
                     </td>
-                    <td>{item.notes}</td>
+                    <td className="notes-cell">{item.notes}</td>
                     <td>{item.archived ? 'Ja' : 'Nein'}</td>
                     <td>
                       {(item.attachments || []).length === 0 && '–'}
@@ -444,18 +462,12 @@ function RoadworksView() {
                       )}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(item)}
-                      >
-                        Bearbeiten
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => toggleArchive(item)}
-                      >
-                        {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                      </button>
+                      <RowActionsMenu
+                        onEdit={() => handleEdit(item)}
+                        onArchive={() => toggleArchive(item)}
+                        onDelete={() => handleDelete(item)}
+                        archived={!!item.archived}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -723,7 +735,7 @@ function RoadworksView() {
                       return labels.join(', ');
                     })()}
                   </td>
-                  <td>{item.notes}</td>
+                  <td className="notes-cell">{item.notes}</td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
                     {(item.attachments || []).length === 0 && '–'}
@@ -744,18 +756,12 @@ function RoadworksView() {
                     )}
                   </td>
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(item)}
-                    >
-                      Bearbeiten
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleArchive(item)}
-                    >
-                      {item.archived ? 'Reaktivieren' : 'Archivieren'}
-                    </button>
+                    <RowActionsMenu
+                      onEdit={() => handleEdit(item)}
+                      onArchive={() => toggleArchive(item)}
+                      onDelete={() => handleDelete(item)}
+                      archived={!!item.archived}
+                    />
                   </td>
                 </tr>
               ))}

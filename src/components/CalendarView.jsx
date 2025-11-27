@@ -10,6 +10,7 @@ import {
   mapRoadworksToEvents,
   mapCharterTripsToEvents,
   mapAppointmentsToEvents,
+  mapMedicalAppointmentsToEvents,
   mapTodosToEvents,
   mapTrainingsToEvents,
 } from '../utils/calendarMapper.js';
@@ -27,20 +28,49 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+function getStoredBool(key, defaultValue) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw === 'true') return true;
+    if (raw === 'false') return false;
+    return defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
 function CalendarView() {
   const [absences, setAbsences] = useState([]);
   const [roadworks, setRoadworks] = useState([]);
   const [charterTrips, setCharterTrips] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [medicalAppointments, setMedicalAppointments] = useState([]);
   const [todos, setTodos] = useState([]);
   const [trainings, setTrainings] = useState([]);
-  const [showAbsences, setShowAbsences] = useState(true);
-  const [showRoadworks, setShowRoadworks] = useState(true);
-  const [showCharter, setShowCharter] = useState(true);
-  const [showAppointments, setShowAppointments] = useState(true);
-  const [showTodos, setShowTodos] = useState(true);
-  const [showTrainings, setShowTrainings] = useState(true);
-  const [showArchived, setShowArchived] = useState(false);
+  const [showAbsences, setShowAbsences] = useState(() =>
+    getStoredBool('cal_show_absences', true),
+  );
+  const [showRoadworks, setShowRoadworks] = useState(() =>
+    getStoredBool('cal_show_roadworks', true),
+  );
+  const [showCharter, setShowCharter] = useState(() =>
+    getStoredBool('cal_show_charter', true),
+  );
+  const [showAppointments, setShowAppointments] = useState(() =>
+    getStoredBool('cal_show_appointments', true),
+  );
+  const [showMedicalAppointments, setShowMedicalAppointments] = useState(() =>
+    getStoredBool('cal_show_medicalAppointments', true),
+  );
+  const [showTodos, setShowTodos] = useState(() =>
+    getStoredBool('cal_show_todos', true),
+  );
+  const [showTrainings, setShowTrainings] = useState(() =>
+    getStoredBool('cal_show_trainings', true),
+  );
+  const [showArchived, setShowArchived] = useState(() =>
+    getStoredBool('cal_show_archived', false),
+  );
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
@@ -64,6 +94,14 @@ function CalendarView() {
       setAppointments(data);
     });
 
+    const unsubMedicalAppointments = onSnapshot(
+      collection(db, 'medicalAppointments'),
+      (snap) => {
+        const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setMedicalAppointments(data);
+      },
+    );
+
     const unsubTodos = onSnapshot(collection(db, 'todos'), (snap) => {
       const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setTodos(data);
@@ -79,10 +117,38 @@ function CalendarView() {
       unsubRoad();
       unsubTrips();
       unsubAppointments();
+      unsubMedicalAppointments();
       unsubTodos();
       unsubTrainings();
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('cal_show_absences', String(showAbsences));
+      window.localStorage.setItem('cal_show_roadworks', String(showRoadworks));
+      window.localStorage.setItem('cal_show_charter', String(showCharter));
+      window.localStorage.setItem('cal_show_appointments', String(showAppointments));
+      window.localStorage.setItem(
+        'cal_show_medicalAppointments',
+        String(showMedicalAppointments),
+      );
+      window.localStorage.setItem('cal_show_todos', String(showTodos));
+      window.localStorage.setItem('cal_show_trainings', String(showTrainings));
+      window.localStorage.setItem('cal_show_archived', String(showArchived));
+    } catch {
+      // ignore
+    }
+  }, [
+    showAbsences,
+    showRoadworks,
+    showCharter,
+    showAppointments,
+    showMedicalAppointments,
+    showTodos,
+    showTrainings,
+    showArchived,
+  ]);
 
   const events = useMemo(() => {
     const filterArchived = (items) =>
@@ -101,6 +167,11 @@ function CalendarView() {
     if (showAppointments) {
       all = all.concat(mapAppointmentsToEvents(filterArchived(appointments)));
     }
+    if (showMedicalAppointments) {
+      all = all.concat(
+        mapMedicalAppointmentsToEvents(filterArchived(medicalAppointments)),
+      );
+    }
     if (showTodos) {
       all = all.concat(mapTodosToEvents(filterArchived(todos)));
     }
@@ -115,10 +186,12 @@ function CalendarView() {
     appointments,
     todos,
     trainings,
+    medicalAppointments,
     showAbsences,
     showRoadworks,
     showCharter,
     showAppointments,
+    showMedicalAppointments,
     showTodos,
     showTrainings,
     showArchived,
@@ -147,6 +220,9 @@ function CalendarView() {
     }
     if (event.type === 'appointment') {
       return { style: { ...base, backgroundColor: '#22c55e' } }; // grün
+    }
+    if (event.type === 'medical') {
+      return { style: { ...base, backgroundColor: '#0ea5e9' } }; // blau für Betriebsarzt-Termine
     }
     if (event.type === 'todo') {
       return { style: { ...base, backgroundColor: '#ef4444' } }; // rot
@@ -196,6 +272,12 @@ function CalendarView() {
           : a.timeFrom
         : '';
       return <span>{timeText ? `${a.title || 'Termin'} (${timeText})` : a.title || 'Termin'}</span>;
+    }
+    if (event.type === 'medical') {
+      const m = event.resource || {};
+      const timeText = m.time || '';
+      const baseTitle = `Betriebsarzt ${m.personalNumber || ''}`.trim();
+      return <span>{timeText ? `${baseTitle} (${timeText})` : baseTitle}</span>;
     }
     if (event.type === 'todo') {
       return <span>{event.resource?.title || 'To-Do'}</span>;
@@ -256,6 +338,15 @@ function CalendarView() {
               onChange={(e) => setShowAppointments(e.target.checked)}
             />
             Termine
+          </label>
+          <label className="filter-chip">
+            <span className="filter-dot filter-dot-appointment" />
+            <input
+              type="checkbox"
+              checked={showMedicalAppointments}
+              onChange={(e) => setShowMedicalAppointments(e.target.checked)}
+            />
+            Termine Betriebsarzt
           </label>
           <label className="filter-chip">
             <span className="filter-dot filter-dot-todo" />
@@ -322,6 +413,9 @@ function CalendarView() {
           <span className="legend-dot legend-dot-appointment" /> Termine
         </div>
         <div className="legend-item">
+          <span className="legend-dot legend-dot-appointment" /> Termine Betriebsarzt
+        </div>
+        <div className="legend-item">
           <span className="legend-dot legend-dot-todo" /> To-Dos
         </div>
         <div className="legend-item">
@@ -365,6 +459,27 @@ function CalendarView() {
                   </p>
                   <p>
                     <strong>Notizen:</strong> {selectedEvent.resource?.notes || '-'}
+                  </p>
+                </>
+              )}
+
+              {selectedEvent.type === 'medical' && (
+                <>
+                  <p>
+                    <strong>Personalnummer:</strong>{' '}
+                    {selectedEvent.resource?.personalNumber || '-'}
+                  </p>
+                  <p>
+                    <strong>Datum:</strong> {selectedEvent.resource?.date || '-'}
+                  </p>
+                  <p>
+                    <strong>Uhrzeit:</strong> {selectedEvent.resource?.time || '-'}
+                  </p>
+                  <p>
+                    <strong>Ort:</strong> {selectedEvent.resource?.location || '-'}
+                  </p>
+                  <p>
+                    <strong>Bemerkung:</strong> {selectedEvent.resource?.notes || '-'}
                   </p>
                 </>
               )}
