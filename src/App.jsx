@@ -40,7 +40,7 @@ function AppShell() {
         <header className="app-header">
           <div className="app-header-main">
             <div>
-              <h1>SNG-Verkehrsleitung Dashboard (Version 1.7)</h1>
+              <h1>SNG-Verkehrsleitung Dashboard (Version 1.8)</h1>
               <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
             </div>
           </div>
@@ -58,7 +58,7 @@ function AppShell() {
         <header className="app-header">
           <div className="app-header-main">
             <div>
-              <h1>SNG-Verkehrsleitung Dashboard (Version 1.7)</h1>
+              <h1>SNG-Verkehrsleitung Dashboard (Version 1.8)</h1>
               <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
             </div>
           </div>
@@ -75,7 +75,7 @@ function AppShell() {
       <header className="app-header">
         <div className="app-header-main">
           <div>
-            <h1>SNG-Verkehrsleitung Dashboard (Version 1.7)</h1>
+            <h1>SNG-Verkehrsleitung Dashboard (Version 1.8)</h1>
             <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

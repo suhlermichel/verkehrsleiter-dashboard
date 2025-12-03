@@ -279,6 +279,7 @@ function AbsencesView() {
               <option value="endDate">Bis-Datum</option>
               <option value="personnelNumber">Personalnummer</option>
               <option value="status">Status</option>
+              <option value="enteredUntil">Im PERDIS eingetragen bis</option>
             </select>
           </label>
           <label>

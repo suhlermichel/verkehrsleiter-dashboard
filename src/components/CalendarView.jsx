@@ -5,6 +5,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import de from 'date-fns/locale/de';
 import { db } from '../firebase.js';
+import { useAuth } from '../auth/AuthContext.jsx';
 import {
   mapAbsencesToEvents,
   mapRoadworksToEvents,
@@ -72,6 +73,15 @@ function CalendarView() {
     getStoredBool('cal_show_archived', false),
   );
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const { canView } = useAuth();
+
+  const canViewAbsences = canView('absences');
+  const canViewRoadworks = canView('roadworks');
+  const canViewCharter = canView('charter');
+  const canViewAppointments = canView('appointments');
+  const canViewMedicalAppointments = canView('medicalAppointments');
+  const canViewTodos = canView('todos');
+  const canViewTrainings = canView('trainings');
 
   useEffect(() => {
     const unsubAbs = onSnapshot(collection(db, 'absences'), (snap) => {
@@ -148,6 +158,13 @@ function CalendarView() {
     showTodos,
     showTrainings,
     showArchived,
+    canViewAbsences,
+    canViewRoadworks,
+    canViewCharter,
+    canViewAppointments,
+    canViewMedicalAppointments,
+    canViewTodos,
+    canViewTrainings,
   ]);
 
   const events = useMemo(() => {
@@ -155,27 +172,27 @@ function CalendarView() {
       items.filter((i) => (showArchived ? true : !i.archived));
 
     let all = [];
-    if (showAbsences) {
+    if (showAbsences && canViewAbsences) {
       all = all.concat(mapAbsencesToEvents(filterArchived(absences)));
     }
-    if (showRoadworks) {
+    if (showRoadworks && canViewRoadworks) {
       all = all.concat(mapRoadworksToEvents(filterArchived(roadworks)));
     }
-    if (showCharter) {
+    if (showCharter && canViewCharter) {
       all = all.concat(mapCharterTripsToEvents(filterArchived(charterTrips)));
     }
-    if (showAppointments) {
+    if (showAppointments && canViewAppointments) {
       all = all.concat(mapAppointmentsToEvents(filterArchived(appointments)));
     }
-    if (showMedicalAppointments) {
+    if (showMedicalAppointments && canViewMedicalAppointments) {
       all = all.concat(
         mapMedicalAppointmentsToEvents(filterArchived(medicalAppointments)),
       );
     }
-    if (showTodos) {
+    if (showTodos && canViewTodos) {
       all = all.concat(mapTodosToEvents(filterArchived(todos)));
     }
-    if (showTrainings) {
+    if (showTrainings && canViewTrainings) {
       all = all.concat(mapTrainingsToEvents(filterArchived(trainings)));
     }
     return all;
@@ -303,69 +320,83 @@ function CalendarView() {
       <div className="calendar-filters-card">
         <h3 className="calendar-filters-title">Filter nach Kategorie:</h3>
         <div className="calendar-filters-row">
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-roadwork" />
-            <input
-              type="checkbox"
-              checked={showRoadworks}
-              onChange={(e) => setShowRoadworks(e.target.checked)}
-            />
-            Baustellen
-          </label>
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-absence" />
-            <input
-              type="checkbox"
-              checked={showAbsences}
-              onChange={(e) => setShowAbsences(e.target.checked)}
-            />
-            Abwesenheiten
-          </label>
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-charter" />
-            <input
-              type="checkbox"
-              checked={showCharter}
-              onChange={(e) => setShowCharter(e.target.checked)}
-            />
-            Fahrten
-          </label>
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-appointment" />
-            <input
-              type="checkbox"
-              checked={showAppointments}
-              onChange={(e) => setShowAppointments(e.target.checked)}
-            />
-            Termine
-          </label>
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-appointment" />
-            <input
-              type="checkbox"
-              checked={showMedicalAppointments}
-              onChange={(e) => setShowMedicalAppointments(e.target.checked)}
-            />
-            Termine Betriebsarzt
-          </label>
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-todo" />
-            <input
-              type="checkbox"
-              checked={showTodos}
-              onChange={(e) => setShowTodos(e.target.checked)}
-            />
-            To-Dos
-          </label>
-          <label className="filter-chip">
-            <span className="filter-dot filter-dot-training" />
-            <input
-              type="checkbox"
-              checked={showTrainings}
-              onChange={(e) => setShowTrainings(e.target.checked)}
-            />
-            Schulungen
-          </label>
+          {canViewRoadworks && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-roadwork" />
+              <input
+                type="checkbox"
+                checked={showRoadworks}
+                onChange={(e) => setShowRoadworks(e.target.checked)}
+              />
+              Baustellen
+            </label>
+          )}
+          {canViewAbsences && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-absence" />
+              <input
+                type="checkbox"
+                checked={showAbsences}
+                onChange={(e) => setShowAbsences(e.target.checked)}
+              />
+              Abwesenheiten
+            </label>
+          )}
+          {canViewCharter && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-charter" />
+              <input
+                type="checkbox"
+                checked={showCharter}
+                onChange={(e) => setShowCharter(e.target.checked)}
+              />
+              Fahrten
+            </label>
+          )}
+          {canViewAppointments && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-appointment" />
+              <input
+                type="checkbox"
+                checked={showAppointments}
+                onChange={(e) => setShowAppointments(e.target.checked)}
+              />
+              Termine
+            </label>
+          )}
+          {canViewMedicalAppointments && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-appointment" />
+              <input
+                type="checkbox"
+                checked={showMedicalAppointments}
+                onChange={(e) => setShowMedicalAppointments(e.target.checked)}
+              />
+              Termine Betriebsarzt
+            </label>
+          )}
+          {canViewTodos && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-todo" />
+              <input
+                type="checkbox"
+                checked={showTodos}
+                onChange={(e) => setShowTodos(e.target.checked)}
+              />
+              To-Dos
+            </label>
+          )}
+          {canViewTrainings && (
+            <label className="filter-chip">
+              <span className="filter-dot filter-dot-training" />
+              <input
+                type="checkbox"
+                checked={showTrainings}
+                onChange={(e) => setShowTrainings(e.target.checked)}
+              />
+              Schulungen
+            </label>
+          )}
         </div>
         <div className="calendar-filters-row">
           <label className="checkbox-label">
