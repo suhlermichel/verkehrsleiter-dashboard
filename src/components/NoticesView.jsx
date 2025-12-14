@@ -56,6 +56,7 @@ function NoticesView() {
   );
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const colRef = collection(db, 'notices');
@@ -142,6 +143,7 @@ function NoticesView() {
       }
 
       setForm(emptyForm());
+      setShowForm(false);
     } catch (err) {
       setError('Fehler beim Speichern: ' + err.message);
     }
@@ -243,6 +245,7 @@ function NoticesView() {
           type="button"
           onClick={() => {
             setForm(emptyForm());
+            setShowForm(true);
           }}
         >
           Neu anlegen
@@ -290,7 +293,194 @@ function NoticesView() {
       {loading && <p>Lade Dienstanweisungen & Aushänge...</p>}
       {error && <p className="error-text">{error}</p>}
 
-      <div className="list-and-form">
+      {showForm ? (
+        <div className="list-and-form">
+          <section className="list-section">
+            <h3>Übersicht</h3>
+            <table className="data-table zebra">
+              <thead>
+                <tr>
+                  <th>Titel</th>
+                  <th>Typ</th>
+                  <th>Zielgruppe</th>
+                  <th>Gültig von</th>
+                  <th>Gültig bis</th>
+                  <th>Beschreibung</th>
+                  <th>Dokument</th>
+                  <th>Archiv</th>
+                  <th>Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAndSorted.map((item) => (
+                  <tr key={item.id} className={item.archived ? 'archived-row' : ''}>
+                    <td>{item.title}</td>
+                    <td>{item.type}</td>
+                    <td>{item.targetGroup}</td>
+                    <td>{formatDate(item.validFrom)}</td>
+                    <td>{formatDate(item.validTo)}</td>
+                    <td className="notes-cell">{item.description}</td>
+                    <td>
+                      {item.fileUrl ? (
+                        <button type="button" onClick={() => handleOpenFile(item)}>
+                          Ansehen
+                        </button>
+                      ) : (
+                        '–'
+                      )}
+                    </td>
+                    <td>{item.archived ? 'Ja' : 'Nein'}</td>
+                    <td>
+                      <RowActionsMenu
+                        onEdit={() => handleEdit(item)}
+                        onArchive={() => toggleArchive(item)}
+                        onDelete={() => handleDelete(item)}
+                        archived={!!item.archived}
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {!loading && filteredAndSorted.length === 0 && (
+                  <tr>
+                    <td colSpan={9}>Keine Einträge vorhanden.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </section>
+
+          <section className="form-section">
+            <h3>{form.id ? 'Eintrag bearbeiten' : 'Neu anlegen'}</h3>
+            <form onSubmit={handleSubmit} className="data-form">
+              <label>
+                Titel*
+                <input
+                  name="title"
+                  type="text"
+                  value={form.title}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Typ
+                <select name="type" value={form.type} onChange={handleChange}>
+                  {NOTICE_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Zielgruppe
+                <select
+                  name="targetGroup"
+                  value={form.targetGroup}
+                  onChange={handleChange}
+                >
+                  {TARGET_GROUPS.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Gültig von*
+                <input
+                  name="validFrom"
+                  type="date"
+                  value={form.validFrom}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Gültig bis
+                <input
+                  name="validTo"
+                  type="date"
+                  value={form.validTo}
+                  onChange={handleChange}
+                />
+              </label>
+              <label>
+                Beschreibung
+                <textarea
+                  name="description"
+                  rows={3}
+                  value={form.description}
+                  onChange={handleChange}
+                />
+              </label>
+
+              <div className="attachments-section">
+                <h4>Dokument (PDF/Bild)</h4>
+                {!form.id && (
+                  <p className="attachments-hint">
+                    Bitte speichern Sie den Eintrag zuerst, bevor Sie ein Dokument hochladen.
+                  </p>
+                )}
+                {form.id && (
+                  <>
+                    <label className="attachments-upload-label">
+                      <span>Datei hochladen</span>
+                      <input
+                        type="file"
+                        onChange={handleFileUpload}
+                        disabled={uploading}
+                      />
+                    </label>
+                    {uploading && <p className="attachments-status">Lade Datei hoch...</p>}
+                  </>
+                )}
+                {uploadError && <p className="error-text">{uploadError}</p>}
+
+                {form.id && form.fileUrl && (
+                  <p>
+                    Aktuelles Dokument:{' '}
+                    <button type="button" onClick={() => handleOpenFile(form)}>
+                      {form.fileName || 'Ansehen'}
+                    </button>
+                  </p>
+                )}
+              </div>
+
+              <label className="checkbox-label">
+                <input
+                  name="archived"
+                  type="checkbox"
+                  checked={form.archived}
+                  onChange={handleChange}
+                />
+                Direkt als archiviert markieren
+              </label>
+
+              <div className="form-buttons">
+                <button type="submit">
+                  {form.id ? 'Speichern' : 'Anlegen'}
+                </button>
+                {form.id && (
+                  <button
+                    type="button"
+                    onClick={() => setForm(emptyForm())}
+                  >
+                    Abbrechen / Neu
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm(emptyForm());
+                    setShowForm(false);
+                  }}
+                >
+                  Schließen
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : (
         <section className="list-section">
           <h3>Übersicht</h3>
           <table className="data-table zebra">
@@ -344,135 +534,7 @@ function NoticesView() {
             </tbody>
           </table>
         </section>
-
-        <section className="form-section">
-          <h3>{form.id ? 'Eintrag bearbeiten' : 'Neu anlegen'}</h3>
-          <form onSubmit={handleSubmit} className="data-form">
-            <label>
-              Titel*
-              <input
-                name="title"
-                type="text"
-                value={form.title}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Typ
-              <select name="type" value={form.type} onChange={handleChange}>
-                {NOTICE_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Zielgruppe
-              <select
-                name="targetGroup"
-                value={form.targetGroup}
-                onChange={handleChange}
-              >
-                {TARGET_GROUPS.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Gültig von*
-              <input
-                name="validFrom"
-                type="date"
-                value={form.validFrom}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Gültig bis
-              <input
-                name="validTo"
-                type="date"
-                value={form.validTo}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Beschreibung
-              <textarea
-                name="description"
-                rows={3}
-                value={form.description}
-                onChange={handleChange}
-              />
-            </label>
-
-            <div className="attachments-section">
-              <h4>Dokument (PDF/Bild)</h4>
-              {!form.id && (
-                <p className="attachments-hint">
-                  Bitte speichern Sie den Eintrag zuerst, bevor Sie ein Dokument hochladen.
-                </p>
-              )}
-              {form.id && (
-                <>
-                  <label className="attachments-upload-label">
-                    <span>Datei hochladen</span>
-                    <input
-                      type="file"
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                    />
-                  </label>
-                  {uploading && <p className="attachments-status">Lade Datei hoch...</p>}
-                </>
-              )}
-              {uploadError && <p className="error-text">{uploadError}</p>}
-
-              {form.id && form.fileUrl && (
-                <p>
-                  Aktuelles Dokument:{' '}
-                  <button type="button" onClick={() => handleOpenFile(form)}>
-                    {form.fileName || 'Ansehen'}
-                  </button>
-                </p>
-              )}
-            </div>
-
-            <label className="checkbox-label">
-              <input
-                name="archived"
-                type="checkbox"
-                checked={form.archived}
-                onChange={handleChange}
-              />
-              Direkt als archiviert markieren
-            </label>
-
-            <div className="form-buttons">
-              <button type="submit">
-                {form.id ? 'Speichern' : 'Anlegen'}
-              </button>
-              {form.id && (
-                <button
-                  type="button"
-                  onClick={() => setForm(emptyForm())}
-                >
-                  Abbrechen / Neu
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setForm(emptyForm())}
-              >
-                Schließen
-              </button>
-            </div>
-          </form>
-        </section>
-      </div>
+      )}
     </div>
   );
 }

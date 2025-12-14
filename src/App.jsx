@@ -24,6 +24,16 @@ function AppShell() {
       return 'calendar';
     }
   });
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem('theme');
+      if (stored === 'dark') return true;
+      if (stored === 'light') return false;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch {
+      return false;
+    }
+  });
   const { firebaseUser, role, canView, signOut, loading } = useAuth();
 
   useEffect(() => {
@@ -34,13 +44,21 @@ function AppShell() {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    } catch {
+      // Ignorieren, falls localStorage nicht verfügbar ist.
+    }
+  }, [isDarkMode]);
+
   if (loading) {
     return (
-      <div className="app-root">
+      <div className={"app-root " + (isDarkMode ? 'theme-dark' : 'theme-light')}>
         <header className="app-header">
           <div className="app-header-main">
             <div>
-              <h1>SNG-Verkehrsleitung Dashboard (Version 1.8)</h1>
+              <h1>SNG-Verkehrsleitung Dashboard (Version 1.9)</h1>
               <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
             </div>
           </div>
@@ -54,11 +72,11 @@ function AppShell() {
 
   if (!firebaseUser) {
     return (
-      <div className="app-root">
+      <div className={"app-root " + (isDarkMode ? 'theme-dark' : 'theme-light')}>
         <header className="app-header">
           <div className="app-header-main">
             <div>
-              <h1>SNG-Verkehrsleitung Dashboard (Version 1.8)</h1>
+              <h1>SNG-Verkehrsleitung Dashboard (Version 1.9)</h1>
               <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
             </div>
           </div>
@@ -71,14 +89,20 @@ function AppShell() {
   }
 
   return (
-    <div className="app-root">
+    <div className={"app-root " + (isDarkMode ? 'theme-dark' : 'theme-light')}>
       <header className="app-header">
         <div className="app-header-main">
           <div>
-            <h1>SNG-Verkehrsleitung Dashboard (Version 1.8)</h1>
+            <h1>SNG-Verkehrsleitung Dashboard (Version 1.9)</h1>
             <p>Einfache interne Übersicht für Abwesenheiten, Baustellen, Fahrten und Planung</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              type="button"
+              onClick={() => setIsDarkMode((prev) => !prev)}
+            >
+              {isDarkMode ? 'Dark' : 'Light'}
+            </button>
             <span>{firebaseUser.email}</span>
             <button type="button" onClick={signOut}>
               Abmelden

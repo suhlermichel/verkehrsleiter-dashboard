@@ -28,7 +28,8 @@ function emptyForm() {
     id: null,
     title: '',
     location: '',
-    date: '',
+    dateFrom: '',
+    dateTo: '',
     timeFrom: '',
     timeTo: '',
     notes: '',
@@ -85,8 +86,8 @@ function AppointmentsView() {
       if (sortBy === 'location') {
         return (a.location || '').localeCompare(b.location || '') * dir;
       }
-      const da = a.date || '';
-      const dbv = b.date || '';
+      const da = a.dateFrom || a.date || '';
+      const dbv = b.dateFrom || b.date || '';
       return da.localeCompare(dbv) * dir;
     });
 
@@ -110,8 +111,8 @@ function AppointmentsView() {
     e.preventDefault();
     setError('');
 
-    if (!form.title || !form.date || !form.timeFrom) {
-      setError('Bitte mindestens Titel, Datum und Startzeit ausfüllen.');
+    if (!form.title || !form.dateFrom || !form.timeFrom) {
+      setError('Bitte mindestens Titel, Datum-von und Startzeit ausfüllen.');
       return;
     }
 
@@ -119,7 +120,12 @@ function AppointmentsView() {
       const payload = {
         title: form.title,
         location: form.location || '',
-        date: form.date,
+        // Abwärtskompatibilität: altes Feld "date" bleibt erhalten und
+        // wird mit dem "von"-Datum befüllt. Neue Felder werden zusätzlich
+        // gespeichert.
+        date: form.dateFrom,
+        dateFrom: form.dateFrom,
+        dateTo: form.dateTo || '',
         timeFrom: form.timeFrom,
         timeTo: form.timeTo || '',
         notes: form.notes || '',
@@ -146,7 +152,10 @@ function AppointmentsView() {
       id: item.id,
       title: item.title || '',
       location: item.location || '',
-      date: item.date || '',
+      // Falls neue Felder bereits existieren, diese verwenden;
+      // ansonsten das alte Feld "date" als von-Datum interpretieren.
+      dateFrom: item.dateFrom || item.date || '',
+      dateTo: item.dateTo || '',
       timeFrom: item.timeFrom || '',
       timeTo: item.timeTo || '',
       notes: item.notes || '',
@@ -252,7 +261,8 @@ function AppointmentsView() {
                   <th>Status</th>
                   <th>Titel</th>
                   <th>Ort</th>
-                  <th>Datum</th>
+                  <th>Von Datum</th>
+                  <th>Bis Datum</th>
                   <th>Zeit</th>
                   <th>Notizen</th>
                   <th>Archiv</th>
@@ -274,7 +284,8 @@ function AppointmentsView() {
                     </td>
                     <td>{item.title}</td>
                     <td>{item.location}</td>
-                    <td>{formatDate(item.date)}</td>
+                    <td>{formatDate(item.dateFrom || item.date)}</td>
+                    <td>{formatDate(item.dateTo || item.dateFrom || item.date)}</td>
                     <td>
                       {item.timeFrom}
                       {item.timeTo ? ` - ${item.timeTo}` : ''}
@@ -322,11 +333,20 @@ function AppointmentsView() {
               />
             </label>
             <label>
-              Datum*
+              Datum von*
               <input
-                name="date"
+                name="dateFrom"
                 type="date"
-                value={form.date}
+                value={form.dateFrom}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Datum bis
+              <input
+                name="dateTo"
+                type="date"
+                value={form.dateTo}
                 onChange={handleChange}
               />
             </label>
@@ -407,7 +427,8 @@ function AppointmentsView() {
                 <th>Status</th>
                 <th>Titel</th>
                 <th>Ort</th>
-                <th>Datum</th>
+                <th>Von Datum</th>
+                <th>Bis Datum</th>
                 <th>Zeit</th>
                 <th>Notizen</th>
                 <th>Archiv</th>
@@ -433,7 +454,8 @@ function AppointmentsView() {
                   </td>
                   <td>{item.title}</td>
                   <td>{item.location}</td>
-                  <td>{formatDate(item.date)}</td>
+                  <td>{formatDate(item.dateFrom || item.date)}</td>
+                  <td>{formatDate(item.dateTo || item.dateFrom || item.date)}</td>
                   <td>
                     {item.timeFrom}
                     {item.timeTo ? ` - ${item.timeTo}` : ''}

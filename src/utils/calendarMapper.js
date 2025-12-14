@@ -66,8 +66,10 @@ export function mapAppointmentsToEvents(appointments) {
       baseEvent({
         id: `appointment-${a.id}`,
         title: a.title || 'Termin',
-        start: a.date,
-        end: a.date,
+        // Unterstctzt sowohl alte Eintrge mit nur "date" als auch
+        // neue Eintrge mit "dateFrom"/"dateTo".
+        start: a.dateFrom || a.date,
+        end: a.dateTo || a.dateFrom || a.date,
         type: 'appointment',
         source: a,
       }),

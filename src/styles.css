@@ -5,6 +5,27 @@
   min-height: 100vh;
 }
 
+.app-root.theme-dark {
+  background-color: #0b1120;
+  color: #e5e7eb;
+}
+
+.app-root.theme-dark .app-header {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+.app-root.theme-dark .app-main,
+.app-root.theme-dark .app-main.main-calendar,
+.app-root.theme-dark .app-main.main-absences,
+.app-root.theme-dark .app-main.main-roadworks,
+.app-root.theme-dark .app-main.main-charter,
+.app-root.theme-dark .app-main.main-appointments,
+.app-root.theme-dark .app-main.main-todos,
+.app-root.theme-dark .app-main.main-trainings {
+  background: #020617;
+}
+
 .app-header {
   padding: 16px 24px;
   /* Version 1.7: Einheitlicher blauer Header ohne Verlauf */
@@ -46,6 +67,10 @@
   background: #e0f2fe;
 }
 
+.app-root.theme-dark .dashboard-tiles {
+  background: #020617;
+}
+
 @media (max-width: 960px) {
   .dashboard-tiles {
     grid-template-columns: minmax(0, 1fr);
@@ -65,6 +90,10 @@
   cursor: pointer;
   min-height: 72px;
   min-width: 0; /* wichtig, damit Inhalt in Flex-Layout umbrechen darf */
+}
+
+.app-root.theme-dark .dashboard-tile {
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.8);
 }
 
 .dashboard-tiles .dashboard-tile {
@@ -99,10 +128,18 @@
   overflow-wrap: anywhere;
 }
 
+.app-root.theme-dark .dashboard-tile .tile-label {
+  color: #e5e7eb;
+}
+
 .dashboard-tile .tile-number {
   font-size: 26px;
   font-weight: 700;
   color: #b91c1c;
+}
+
+.app-root.theme-dark .dashboard-tile .tile-number {
+  color: #f97316;
 }
 
 .dashboard-tile .tile-text {
@@ -113,6 +150,10 @@
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+.app-root.theme-dark .dashboard-tile .tile-text {
+  color: #d1d5db;
 }
 
 @media (max-width: 960px) {
@@ -137,9 +178,17 @@
   background: linear-gradient(135deg, #e0f2fe, #f1f5f9);
 }
 
+.app-root.theme-dark .tile-absences {
+  background: linear-gradient(135deg, #0f172a, #020617);
+}
+
 .tile-roadworks {
   border-left: 4px solid #0f766e;
   background: linear-gradient(135deg, #ccfbf1, #e0f2fe);
+}
+
+.app-root.theme-dark .tile-roadworks {
+  background: linear-gradient(135deg, #022c22, #022c22);
 }
 
 .tile-charter {
@@ -147,9 +196,17 @@
   background: linear-gradient(135deg, #e0e7ff, #eef2ff);
 }
 
+.app-root.theme-dark .tile-charter {
+  background: linear-gradient(135deg, #1e1b4b, #020617);
+}
+
 .tile-appointments {
   border-left: 4px solid #f97316;
   background: linear-gradient(135deg, #ffedd5, #fef3c7);
+}
+
+.app-root.theme-dark .tile-appointments {
+  background: linear-gradient(135deg, #7c2d12, #020617);
 }
 
 .tile-todos {
@@ -157,9 +214,17 @@
   background: linear-gradient(135deg, #fef3c7, #fffbeb);
 }
 
+.app-root.theme-dark .tile-todos {
+  background: linear-gradient(135deg, #713f12, #020617);
+}
+
 .tile-trainings {
   border-left: 4px solid #16a34a;
   background: linear-gradient(135deg, #dcfce7, #ecfdf5);
+}
+
+.app-root.theme-dark .tile-trainings {
+  background: linear-gradient(135deg, #052e16, #020617);
 }
 
 .tile-active {
@@ -172,6 +237,11 @@
   padding: 8px 24px;
   border-bottom: 1px solid #cbd5e1;
   background: #e0f2fe;
+}
+
+.app-root.theme-dark .app-tabs {
+  border-bottom-color: #1f2937;
+  background: #020617;
 }
 
 .tab {
@@ -189,6 +259,16 @@
   border: 1px solid #facc15;
   border-bottom-color: #fefce8;
   font-weight: 600;
+}
+
+.app-root.theme-dark .tab {
+  color: #e5e7eb;
+}
+
+.app-root.theme-dark .tab.active {
+  background: #111827;
+  border-color: #4b5563;
+  border-bottom-color: #111827;
 }
 
 .app-main {
@@ -284,6 +364,12 @@
   padding: 16px 18px 18px;
 }
 
+.app-root.theme-dark .list-section,
+.app-root.theme-dark .form-section {
+  background: #0f172a;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.6);
+}
+
 /* Version 1.7: Formularbereiche bewusst über schwebenden Tabellen-Menüs platzieren,
  * damit 3-Punkte-Menüs keine Formularfelder blockieren, falls sie sich doch überlappen. */
 .form-section {
@@ -314,6 +400,19 @@
   background: #e0f2fe;
 }
 
+.app-root.theme-dark .data-table {
+  background: #020617;
+}
+
+.app-root.theme-dark .data-table th,
+.app-root.theme-dark .data-table td {
+  border-color: #1f2937;
+}
+
+.app-root.theme-dark .data-table th {
+  background: #020617;
+}
+
 /* Für Zellen mit längeren Texten (z.B. Notizen/Beschreibung) kann
  * optional eine linksbündige Ausrichtung verwendet werden. */
 .data-table td.notes-cell,
@@ -326,8 +425,17 @@
   color: #6b7280;
 }
 
+.app-root.theme-dark .archived-row {
+  background: #020617;
+  color: #6b7280;
+}
+
 .data-table.zebra tbody tr:nth-child(even):not(.archived-row) {
   background: #e5e7eb;
+}
+
+.app-root.theme-dark .data-table.zebra tbody tr:nth-child(even):not(.archived-row) {
+  background: #020617;
 }
 
 .traffic-light-dot {
@@ -370,6 +478,11 @@
   border: 1px solid #e2e8f0;
 }
 
+.app-root.theme-dark .data-form {
+  background: #020617;
+  border-color: #1e293b;
+}
+
 .data-form label {
   display: flex;
   flex-direction: column;
@@ -410,6 +523,15 @@ button:hover {
   background: #0284c7;
 }
 
+.app-root.theme-dark button {
+  border-color: #1e293b;
+  background: #1e293b;
+}
+
+.app-root.theme-dark button:hover {
+  background: #0f172a;
+}
+
 .error-text {
   color: #b91c1c;
   font-size: 13px;
@@ -435,6 +557,10 @@ button:hover {
   padding: 10px 14px;
   border-radius: 14px;
   background: #f1f5f9;
+}
+
+.app-root.theme-dark .calendar-filters-card {
+  background: #020617;
 }
 
 .calendar-filters-title {
@@ -506,6 +632,10 @@ button:hover {
   margin-top: 10px;
   font-size: 12px;
   color: #4b5563;
+}
+
+.app-root.theme-dark .calendar-legend {
+  color: #9ca3af;
 }
 
 .legend-item {
@@ -581,6 +711,10 @@ button:hover {
   padding: 16px 18px 18px;
   width: min(480px, 90vw);
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+}
+
+.app-root.theme-dark .modal-content {
+  background: #0f172a;
 }
 
 .modal-header {
