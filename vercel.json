@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/fahrdienst", "destination": "/" },
+    { "source": "/fahrdienst/(.*)", "destination": "/" }
+  ]
+}
