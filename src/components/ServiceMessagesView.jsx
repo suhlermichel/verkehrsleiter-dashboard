@@ -7,59 +7,47 @@ import {
   onSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase.js';
-import { deleteDocument } from '../utils/deleteDocument.js'; // zentrale Löschfunktion
-import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Sortierzustand merken
-import RowActionsMenu from './RowActionsMenu.jsx'; // 3-Punkte-Menü
-import { validateFile } from '../utils/attachments.js';
+import { db } from '../firebase.js';
+import { usePersistentSort } from '../hooks/usePersistentSort.js';
+import { deleteDocument } from '../utils/deleteDocument.js';
+import RowActionsMenu from './RowActionsMenu.jsx';
 
-function formatDate(value) {
-  if (!value) return '';
-  const full = String(value);
-  const str = full.includes('T') ? full.split('T')[0] : full;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    const [year, month, day] = str.split('-');
-    return `${day}.${month}.${year}`;
-  }
-  return value;
-}
-
-const NOTICE_TYPES = ['Dienstanweisung', 'Aushang'];
-const TARGET_GROUPS = ['alle', 'Fahrpersonal', 'Werkstatt', 'Verwaltung'];
+const MESSAGE_TYPES = [
+  { value: 'disturbance', label: 'Aktuelle Informationen' },
+  { value: 'info', label: 'Organisatorische Informationen' },
+];
 
 function emptyForm() {
   return {
     id: null,
     title: '',
-    type: 'Dienstanweisung',
-    targetGroup: 'alle',
+    description: '',
+    type: 'disturbance',
+    isNew: true,
+    priority: 'high',
     validFrom: '',
     validTo: '',
-    description: '',
-    fileUrl: '',
-    fileName: '',
+    showInTicker: false,
     archived: false,
   };
 }
 
-function NoticesView() {
+function ServiceMessagesView() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [form, setForm] = useState(emptyForm());
   const [filterArchived, setFilterArchived] = useState('active');
+  const [filterType, setFilterType] = useState('all');
   const { sortBy, sortDirection, setSortBy, setSortDirection } = usePersistentSort(
-    'sort_notices',
+    'sort_service_messages',
     'validFrom',
     'asc',
   );
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    const colRef = collection(db, 'notices');
+    const colRef = collection(db, 'serviceMessages');
     const unsubscribe = onSnapshot(
       colRef,
       (snapshot) => {
@@ -68,7 +56,7 @@ function NoticesView() {
         setLoading(false);
       },
       (err) => {
-        setError('Fehler beim Laden der Dienstanweisungen & Aushänge: ' + err.message);
+        setError('Fehler beim Laden der Meldungen: ' + err.message);
         setLoading(false);
       },
     );
@@ -85,6 +73,10 @@ function NoticesView() {
       list = list.filter((i) => i.archived);
     }
 
+    if (filterType !== 'all') {
+      list = list.filter((i) => i.type === filterType);
+    }
+
     list.sort((a, b) => {
       const dir = sortDirection === 'asc' ? 1 : -1;
       if (sortBy === 'title') {
@@ -93,8 +85,8 @@ function NoticesView() {
       if (sortBy === 'type') {
         return (a.type || '').localeCompare(b.type || '') * dir;
       }
-      if (sortBy === 'targetGroup') {
-        return (a.targetGroup || '').localeCompare(b.targetGroup || '') * dir;
+      if (sortBy === 'priority') {
+        return (a.priority || '').localeCompare(b.priority || '') * dir;
       }
       const da = a.validFrom || '';
       const dbv = b.validFrom || '';
@@ -102,7 +94,7 @@ function NoticesView() {
     });
 
     return list;
-  }, [items, filterArchived, sortBy, sortDirection]);
+  }, [items, filterArchived, filterType, sortBy, sortDirection]);
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -116,30 +108,33 @@ function NoticesView() {
     e.preventDefault();
     setError('');
 
-    if (!form.title || !form.validFrom) {
-      setError('Bitte mindestens Titel und Gültig-von-Datum ausfüllen.');
+    if (!form.title) {
+      setError('Bitte mindestens einen Titel eingeben.');
       return;
     }
 
     try {
       const payload = {
         title: form.title,
-        type: form.type || 'Dienstanweisung',
-        targetGroup: form.targetGroup || 'alle',
-        validFrom: form.validFrom,
-        validTo: form.validTo || '',
         description: form.description || '',
-        fileUrl: form.fileUrl || '',
-        fileName: form.fileName || '',
-        archived: form.archived || false,
+        type: form.type || 'disturbance',
+        isNew: !!form.isNew,
+        priority: form.priority || 'high',
+        validFrom: form.validFrom || '',
+        validTo: form.validTo || '',
+         showInTicker: !!form.showInTicker,
+        archived: !!form.archived,
         updatedAt: serverTimestamp(),
       };
 
       if (form.id) {
-        const ref = doc(db, 'notices', form.id);
+        const ref = doc(db, 'serviceMessages', form.id);
         await updateDoc(ref, payload);
       } else {
-        await addDoc(collection(db, 'notices'), payload);
+        await addDoc(collection(db, 'serviceMessages'), {
+          ...payload,
+          createdAt: serverTimestamp(),
+        });
       }
 
       setForm(emptyForm());
@@ -153,13 +148,13 @@ function NoticesView() {
     setForm({
       id: item.id,
       title: item.title || '',
-      type: item.type || 'Dienstanweisung',
-      targetGroup: item.targetGroup || 'alle',
+      description: item.description || '',
+      type: item.type || 'disturbance',
+      isNew: !!item.isNew,
+      priority: item.priority || 'high',
       validFrom: item.validFrom || '',
       validTo: item.validTo || '',
-      description: item.description || '',
-      fileUrl: item.fileUrl || '',
-      fileName: item.fileName || '',
+      showInTicker: !!item.showInTicker,
       archived: !!item.archived,
     });
     setShowForm(true);
@@ -167,7 +162,7 @@ function NoticesView() {
 
   async function toggleArchive(item) {
     try {
-      const ref = doc(db, 'notices', item.id);
+      const ref = doc(db, 'serviceMessages', item.id);
       await updateDoc(ref, { archived: !item.archived, updatedAt: serverTimestamp() });
     } catch (err) {
       setError('Fehler beim Aktualisieren des Archiv-Status: ' + err.message);
@@ -176,70 +171,15 @@ function NoticesView() {
 
   async function handleDelete(item) {
     try {
-      // Falls ein Dokument hochgeladen wurde, auch aus dem Storage entfernen
-      if (item.fileUrl && item.storagePath) {
-        const storageRef = ref(storage, item.storagePath);
-        await deleteObject(storageRef).catch(() => {});
-      }
-      await deleteDocument('notices', item.id);
+      await deleteDocument('serviceMessages', item.id);
     } catch (err) {
       setError('Fehler beim Löschen: ' + err.message);
     }
   }
 
-  async function handleFileUpload(e) {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    setUploadError('');
-    if (!file) return;
-
-    const validation = validateFile(file);
-    if (!validation.ok) {
-      setUploadError(validation.error || 'Datei kann nicht hochgeladen werden.');
-      return;
-    }
-
-    if (!form.id) {
-      setUploadError('Bitte speichern Sie den Aushang zuerst, bevor Sie eine Datei hochladen.');
-      return;
-    }
-
-    try {
-      setUploading(true);
-      const storagePath = `notices/${form.id}/${Date.now()}-${file.name}`;
-      const storageRef = ref(storage, storagePath);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-
-      setForm((prev) => ({
-        ...prev,
-        fileUrl: url,
-        fileName: file.name,
-        storagePath,
-      }));
-
-      const refDoc = doc(db, 'notices', form.id);
-      await updateDoc(refDoc, {
-        fileUrl: url,
-        fileName: file.name,
-        storagePath,
-        updatedAt: serverTimestamp(),
-      });
-    } catch (err) {
-      setUploadError('Fehler beim Hochladen der Datei: ' + err.message);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  function handleOpenFile(item) {
-    if (!item.fileUrl) return;
-    window.open(item.fileUrl, '_blank', 'noopener');
-  }
-
   return (
     <div className="section-root">
-      <h2>Dienstanweisungen & Aushänge aktuell</h2>
+      <h2>Informationen Fahrer-Dashboard</h2>
 
       <div style={{ marginBottom: '8px' }}>
         <button
@@ -257,17 +197,26 @@ function NoticesView() {
         <div className="filter-group">
           <label>
             Archiv-Filter:
-            <select
-              value={filterArchived}
-              onChange={(e) => setFilterArchived(e.target.value)}
-            >
+            <select value={filterArchived} onChange={(e) => setFilterArchived(e.target.value)}>
               <option value="active">Nur aktive</option>
               <option value="archived">Nur archivierte</option>
               <option value="all">Alle</option>
             </select>
           </label>
         </div>
-
+        <div className="filter-group">
+          <label>
+            Typ:
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <option value="all">Alle</option>
+              {MESSAGE_TYPES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <div className="filter-group">
           <label>
             Sortieren nach:
@@ -275,15 +224,12 @@ function NoticesView() {
               <option value="validFrom">Gültig von</option>
               <option value="title">Titel</option>
               <option value="type">Typ</option>
-              <option value="targetGroup">Zielgruppe</option>
+              <option value="priority">Priorität</option>
             </select>
           </label>
           <label>
             Richtung:
-            <select
-              value={sortDirection}
-              onChange={(e) => setSortDirection(e.target.value)}
-            >
+            <select value={sortDirection} onChange={(e) => setSortDirection(e.target.value)}>
               <option value="asc">Aufsteigend</option>
               <option value="desc">Absteigend</option>
             </select>
@@ -291,7 +237,7 @@ function NoticesView() {
         </div>
       </div>
 
-      {loading && <p>Lade Dienstanweisungen & Aushänge...</p>}
+      {loading && <p>Lade Meldungen...</p>}
       {error && <p className="error-text">{error}</p>}
 
       {showForm ? (
@@ -303,11 +249,12 @@ function NoticesView() {
                 <tr>
                   <th>Titel</th>
                   <th>Typ</th>
-                  <th>Zielgruppe</th>
+                  <th>NEU</th>
+                  <th>Priorität</th>
+                  <th>Ticker</th>
                   <th>Gültig von</th>
                   <th>Gültig bis</th>
                   <th>Beschreibung</th>
-                  <th>Dokument</th>
                   <th>Archiv</th>
                   <th>Aktionen</th>
                 </tr>
@@ -316,20 +263,15 @@ function NoticesView() {
                 {filteredAndSorted.map((item) => (
                   <tr key={item.id} className={item.archived ? 'archived-row' : ''}>
                     <td>{item.title}</td>
-                    <td>{item.type}</td>
-                    <td>{item.targetGroup}</td>
-                    <td>{formatDate(item.validFrom)}</td>
-                    <td>{formatDate(item.validTo)}</td>
-                    <td className="notes-cell">{item.description}</td>
                     <td>
-                      {item.fileUrl ? (
-                        <button type="button" onClick={() => handleOpenFile(item)}>
-                          Ansehen
-                        </button>
-                      ) : (
-                        '–'
-                      )}
+                      {MESSAGE_TYPES.find((t) => t.value === item.type)?.label || item.type || 'Störung'}
                     </td>
+                    <td>{item.isNew ? 'Ja' : 'Nein'}</td>
+                    <td>{item.priority === 'high' ? 'Hoch' : 'Normal'}</td>
+                    <td>{item.showInTicker ? 'Ja' : 'Nein'}</td>
+                    <td>{item.validFrom || '–'}</td>
+                    <td>{item.validTo || '–'}</td>
+                    <td className="notes-cell">{item.description}</td>
                     <td>{item.archived ? 'Ja' : 'Nein'}</td>
                     <td>
                       <RowActionsMenu
@@ -355,39 +297,36 @@ function NoticesView() {
             <form onSubmit={handleSubmit} className="data-form">
               <label>
                 Titel*
-                <input
-                  name="title"
-                  type="text"
-                  value={form.title}
-                  onChange={handleChange}
-                />
+                <input name="title" type="text" value={form.title} onChange={handleChange} />
               </label>
               <label>
                 Typ
                 <select name="type" value={form.type} onChange={handleChange}>
-                  {NOTICE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
+                  {MESSAGE_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
                     </option>
                   ))}
                 </select>
               </label>
               <label>
-                Zielgruppe
-                <select
-                  name="targetGroup"
-                  value={form.targetGroup}
+                Beschreibung
+                <textarea
+                  name="description"
+                  rows={3}
+                  value={form.description}
                   onChange={handleChange}
-                >
-                  {TARGET_GROUPS.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
+                />
+              </label>
+              <label>
+                Priorität
+                <select name="priority" value={form.priority} onChange={handleChange}>
+                  <option value="high">Hoch</option>
+                  <option value="normal">Normal</option>
                 </select>
               </label>
               <label>
-                Gültig von*
+                Gültig von
                 <input
                   name="validFrom"
                   type="date"
@@ -404,48 +343,24 @@ function NoticesView() {
                   onChange={handleChange}
                 />
               </label>
-              <label>
-                Beschreibung
-                <textarea
-                  name="description"
-                  rows={3}
-                  value={form.description}
+              <label className="checkbox-label">
+                <input
+                  name="isNew"
+                  type="checkbox"
+                  checked={form.isNew}
                   onChange={handleChange}
                 />
+                Als NEU markieren
               </label>
-
-              <div className="attachments-section">
-                <h4>Dokument (PDF/Bild)</h4>
-                {!form.id && (
-                  <p className="attachments-hint">
-                    Bitte speichern Sie den Eintrag zuerst, bevor Sie ein Dokument hochladen.
-                  </p>
-                )}
-                {form.id && (
-                  <>
-                    <label className="attachments-upload-label">
-                      <span>Datei hochladen</span>
-                      <input
-                        type="file"
-                        onChange={handleFileUpload}
-                        disabled={uploading}
-                      />
-                    </label>
-                    {uploading && <p className="attachments-status">Lade Datei hoch...</p>}
-                  </>
-                )}
-                {uploadError && <p className="error-text">{uploadError}</p>}
-
-                {form.id && form.fileUrl && (
-                  <p>
-                    Aktuelles Dokument:{' '}
-                    <button type="button" onClick={() => handleOpenFile(form)}>
-                      {form.fileName || 'Ansehen'}
-                    </button>
-                  </p>
-                )}
-              </div>
-
+              <label className="checkbox-label">
+                <input
+                  name="showInTicker"
+                  type="checkbox"
+                  checked={form.showInTicker}
+                  onChange={handleChange}
+                />
+                Im Fahrdienst-Ticker anzeigen
+              </label>
               <label className="checkbox-label">
                 <input
                   name="archived"
@@ -457,9 +372,7 @@ function NoticesView() {
               </label>
 
               <div className="form-buttons">
-                <button type="submit">
-                  {form.id ? 'Speichern' : 'Anlegen'}
-                </button>
+                <button type="submit">{form.id ? 'Speichern' : 'Anlegen'}</button>
                 {form.id && (
                   <button
                     type="button"
@@ -489,11 +402,12 @@ function NoticesView() {
               <tr>
                 <th>Titel</th>
                 <th>Typ</th>
-                <th>Zielgruppe</th>
+                <th>NEU</th>
+                <th>Priorität</th>
+                <th>Ticker</th>
                 <th>Gültig von</th>
                 <th>Gültig bis</th>
                 <th>Beschreibung</th>
-                <th>Dokument</th>
                 <th>Archiv</th>
                 <th>Aktionen</th>
               </tr>
@@ -502,20 +416,15 @@ function NoticesView() {
               {filteredAndSorted.map((item) => (
                 <tr key={item.id} className={item.archived ? 'archived-row' : ''}>
                   <td>{item.title}</td>
-                  <td>{item.type}</td>
-                  <td>{item.targetGroup}</td>
-                  <td>{formatDate(item.validFrom)}</td>
-                  <td>{formatDate(item.validTo)}</td>
-                  <td className="notes-cell">{item.description}</td>
                   <td>
-                    {item.fileUrl ? (
-                      <button type="button" onClick={() => handleOpenFile(item)}>
-                        Ansehen
-                      </button>
-                    ) : (
-                      '–'
-                    )}
+                    {MESSAGE_TYPES.find((t) => t.value === item.type)?.label || item.type || 'Störung'}
                   </td>
+                  <td>{item.isNew ? 'Ja' : 'Nein'}</td>
+                  <td>{item.priority === 'high' ? 'Hoch' : 'Normal'}</td>
+                  <td>{item.showInTicker ? 'Ja' : 'Nein'}</td>
+                  <td>{item.validFrom || '–'}</td>
+                  <td>{item.validTo || '–'}</td>
+                  <td className="notes-cell">{item.description}</td>
                   <td>{item.archived ? 'Ja' : 'Nein'}</td>
                   <td>
                     <RowActionsMenu
@@ -540,4 +449,4 @@ function NoticesView() {
   );
 }
 
-export default NoticesView;
+export default ServiceMessagesView;

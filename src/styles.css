@@ -6,7 +6,7 @@
 }
 
 .app-root.theme-dark {
-  background-color: #0b1120;
+  background: radial-gradient(circle at top left, #4b5563 0, #020617 45%, #000 100%);
   color: #e5e7eb;
 }
 
@@ -27,10 +27,9 @@
 }
 
 .app-header {
-  padding: 16px 24px;
-  /* Version 1.7: Einheitlicher blauer Header ohne Verlauf */
-  background: #0ea5e9;
-  color: white;
+  padding: 12px 20px;
+  background: #111827;
+  color: #f9fafb;
 }
 
 .app-header-main {
@@ -234,9 +233,9 @@
 .app-tabs {
   display: flex;
   gap: 4px;
-  padding: 8px 24px;
-  border-bottom: 1px solid #cbd5e1;
-  background: #e0f2fe;
+  padding: 6px 20px;
+  border-bottom: 1px solid #1f2937;
+  background: #111827;
 }
 
 .app-root.theme-dark .app-tabs {
@@ -272,7 +271,7 @@
 }
 
 .app-main {
-  padding: 24px 32px 40px;
+  padding: 16px 20px 24px;
   transition: background-color 0.2s ease;
 }
 
@@ -304,8 +303,81 @@
   background: #ecfdf3;
 }
 
+/* Informationen Fahrer-Dashboard (ServiceMessagesView):
+ * Tabelle bei schmalen Fenstern nicht quetschen, sondern
+ * horizontal scrollbar machen. */
+.app-main.main-serviceMessages .list-section {
+  overflow-x: auto;
+}
+
+.app-main.main-serviceMessages .list-section .data-table {
+  min-width: 960px;
+}
+
 .section-root h2 {
   margin-top: 0;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #374151;
+}
+
+.fahrdienst-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fahrdienst-panel-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #9ca3af;
+  padding: 0 2px;
+}
+
+.fahrdienst-drag-handle {
+  cursor: grab;
+  user-select: none;
+}
+
+.fahrdienst-size-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.fahrdienst-size-buttons button {
+  border-radius: 999px;
+  border: 1px solid #4b5563;
+  background: #111827;
+  color: #e5e7eb;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+.fahrdienst-size-buttons button.active {
+  border-color: #facc15;
+  background: #f59e0b;
+  color: #111827;
+}
+
+.fahrdienst-panel-dragging {
+  opacity: 0.7;
+}
+
+.fahrdienst-size-s .fahrdienst-panel {
+  min-height: 120px;
+}
+
+.fahrdienst-size-m .fahrdienst-panel {
+  min-height: 170px;
+}
+
+.fahrdienst-size-l .fahrdienst-panel {
+  min-height: 240px;
 }
 
 .calendar-subtitle {
@@ -480,7 +552,7 @@
 
 .app-root.theme-dark .data-form {
   background: #020617;
-  border-color: #1e293b;
+  border-color: #334155;
 }
 
 .data-form label {
@@ -495,6 +567,14 @@
 .data-form textarea {
   padding: 4px 6px;
   font-size: 13px;
+}
+
+.app-root.theme-dark .data-form input,
+.app-root.theme-dark .data-form select,
+.app-root.theme-dark .data-form textarea {
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: #e5e7eb;
 }
 
 .checkbox-label {
@@ -549,6 +629,15 @@ button:hover {
   font-size: 12px;
   font-weight: 600;
   color: #0369a1;
+}
+
+.app-root.theme-dark .checkbox-group {
+  border-color: #334155;
+  background: #020617;
+}
+
+.app-root.theme-dark .checkbox-group legend {
+  color: #38bdf8;
 }
 
 .calendar-filters-card {
@@ -741,6 +830,11 @@ button:hover {
   background: #f8fafc;
 }
 
+.app-root.theme-dark .attachments-section {
+  border-color: #334155;
+  background: #020617;
+}
+
 .attachments-section h4 {
   margin: 0 0 6px;
   font-size: 13px;
@@ -750,6 +844,10 @@ button:hover {
   margin: 4px 0;
   font-size: 12px;
   color: #6b7280;
+}
+
+.app-root.theme-dark .attachments-hint {
+  color: #9ca3af;
 }
 
 .attachments-upload-label {
@@ -783,6 +881,10 @@ button:hover {
   color: #6b7280;
 }
 
+.app-root.theme-dark .attachments-empty {
+  color: #9ca3af;
+}
+
 .attachment-item {
   display: flex;
   justify-content: space-between;
@@ -790,6 +892,11 @@ button:hover {
   padding: 4px 6px;
   border-radius: 6px;
   background: #e5e7eb;
+}
+
+.app-root.theme-dark .attachment-item {
+  background: #111827;
+  border: 1px solid #1f2937;
 }
 
 .attachment-main {
@@ -807,6 +914,14 @@ button:hover {
 .attachment-type {
   font-size: 11px;
   color: #4b5563;
+}
+
+.app-root.theme-dark .attachment-name {
+  color: #e5e7eb;
+}
+
+.app-root.theme-dark .attachment-type {
+  color: #9ca3af;
 }
 
 .attachment-actions {
@@ -853,4 +968,420 @@ button:hover {
 
 .row-actions-dropdown button:hover {
   background: #e5e7eb;
+}
+
+.app-root.theme-dark .row-actions-dropdown {
+  background: #111827;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.7);
+}
+
+.app-root.theme-dark .row-actions-dropdown button {
+  color: #e5e7eb;
+}
+
+.app-root.theme-dark .row-actions-dropdown button:hover {
+  background: #1f2937;
+}
+
+/* ============================================================
+ * Fahrdienst-Dashboard (separate Ansicht unter /fahrdienst)
+ * An das Referenzbild angelehnt: dunkler Monitor-Look mit
+ * Kopfzeile, roter Alert-Leiste und zwei Spalten mit Panels.
+ * ============================================================ */
+
+.fahrdienst-root {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(circle at top left, #4b5563 0, #020617 45%, #000 100%);
+  color: #f9fafb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.fahrdienst-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  background: #111827;
+  border-bottom: 2px solid #1f2937;
+}
+
+.fahrdienst-header-left h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.fahrdienst-header-right {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.fahrdienst-logo {
+  height: 40px;
+  width: auto;
+}
+
+.fahrdienst-header-datetime {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.fahrdienst-header-datetime span:nth-child(1) {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.fahrdienst-header-datetime span:nth-child(2) {
+  font-size: 18px;
+}
+
+.fahrdienst-header-datetime span:nth-child(3) {
+  font-size: 20px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid #facc15;
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.fahrdienst-alert-bar {
+  background: #b91c1c;
+  color: #fef2f2;
+  padding: 6px 24px;
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 2px solid #7f1d1d;
+}
+
+.fahrdienst-alert-inner {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fahrdienst-alert-track {
+  display: inline-flex;
+}
+
+.fahrdienst-alert-text {
+  display: inline-block;
+  animation: fahrdienst-ticker 12s linear infinite;
+}
+
+@keyframes fahrdienst-ticker {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.fahrdienst-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 20px 16px;
+}
+
+.fahrdienst-main > section {
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .fahrdienst-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fahrdienst-column-left,
+.fahrdienst-column-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fahrdienst-main-single {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fahrdienst-panel {
+  background: rgba(17, 24, 39, 0.98);
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  /* Panel immer die komplette Zellenhöhe nutzen, damit keine unruhigen Lücken entstehen */
+  display: flex;
+  flex-direction: column;
+}
+
+.fahrdienst-panel h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #374151;
+}
+
+.fahrdienst-weather-updated {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.fahrdienst-panel-traffic {
+  /* nicht vollflächig strecken, Höhe soll sich stärker am Inhalt orientieren */
+  flex: 0 0 auto;
+  min-height: 170px;
+}
+
+.fahrdienst-panel-weather {
+  min-height: 170px;
+}
+
+.fahrdienst-panel-disturbances,
+.fahrdienst-panel-info,
+.fahrdienst-panel-trainings {
+  min-height: 170px;
+}
+
+.fahrdienst-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 17px;
+}
+
+.fahrdienst-list-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+/* Dünne Trennlinie zwischen den Einträgen innerhalb einer Kachel
+ * (gilt für alle Fahrdienst-Listen), außer vor dem ersten Eintrag. */
+.fahrdienst-list-item + .fahrdienst-list-item {
+  border-top: 1px solid #1f2937;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+.fahrdienst-list-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.fahrdienst-list-sub {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.fahrdienst-list-bullet {
+  width: 14px;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.fahrdienst-traffic-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.fahrdienst-traffic-dot-sperrung {
+  background: #dc2626;
+}
+
+.fahrdienst-traffic-dot-baustelle {
+  background: #f97316;
+}
+
+.fahrdienst-traffic-dot-umleitung {
+  background: #facc15;
+}
+
+.fahrdienst-traffic-dot-info,
+.fahrdienst-traffic-dot-default {
+  background: #16a34a;
+}
+
+.fahrdienst-stoerung-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.fahrdienst-stoerung-dot-high {
+  background: #ef4444;
+}
+
+.fahrdienst-stoerung-dot-normal {
+  background: #facc15;
+}
+
+.fahrdienst-badge-new {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #b91c1c;
+  color: #fee2e2;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.fahrdienst-badge-endingSoon {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #92400e;
+  color: #ffedd5;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.fahrdienst-weather-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fahrdienst-weather-temp {
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.fahrdienst-weather-main-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.fahrdienst-weather-desc {
+  font-size: 16px;
+  text-align: center;
+}
+
+.fahrdienst-weather-icons {
+  font-size: 56px;
+  margin-bottom: 4px;
+}
+
+.fahrdienst-weather-warning {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fef2f2;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #b91c1c;
+}
+
+.fahrdienst-weather-today {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.fahrdienst-weather-today-slot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.fahrdienst-weather-today-label {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.fahrdienst-weather-today-temp {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.fahrdienst-weather-today-icon {
+  font-size: 22px;
+  margin-top: 2px;
+}
+
+.fahrdienst-weather-forecast {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.fahrdienst-weather-forecast-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fahrdienst-weather-forecast-weekday {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.fahrdienst-weather-forecast-icon {
+  font-size: 20px;
+}
+
+.fahrdienst-weather-forecast-temp {
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.fahrdienst-quote-row {
+  grid-column: 1 / -1;
+  padding: 8px 20px 20px;
+}
+
+.fahrdienst-quote-row .fahrdienst-panel {
+  text-align: center;
+}
+
+.fahrdienst-quote-row .fahrdienst-panel h2 {
+  justify-content: center;
+}
+
+.fahrdienst-quote-row .fahrdienst-panel p {
+  font-size: 18px;
 }

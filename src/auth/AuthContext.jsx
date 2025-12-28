@@ -20,6 +20,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     notices: { view: true, edit: true },
     todos: { view: true, edit: true },
     trainings: { view: true, edit: true },
+    serviceMessages: { view: true, edit: true },
   },
   verkehrsleiter: {
     absences: { view: true, edit: true },
@@ -29,6 +30,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     medicalAppointments: { view: true, edit: true },
     todos: { view: true, edit: true },
     trainings: { view: true, edit: true },
+    serviceMessages: { view: true, edit: true },
   },
   ueberwachung: {
     absences: { view: true, edit: false },
@@ -39,6 +41,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     notices: { view: true, edit: false },
     todos: { view: true, edit: false },
     trainings: { view: true, edit: false },
+    serviceMessages: { view: true, edit: false },
   },
   readonly: {
     absences: { view: true, edit: false },
@@ -48,6 +51,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     medicalAppointments: { view: true, edit: false },
     todos: { view: true, edit: false },
     trainings: { view: true, edit: false },
+    serviceMessages: { view: true, edit: false },
   },
   vertretung_verkehrsleiter: {
     absences: { view: true, edit: false },
@@ -57,6 +61,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     medicalAppointments: { view: true, edit: false },
     todos: { view: true, edit: false },
     trainings: { view: true, edit: false },
+    serviceMessages: { view: true, edit: false },
   },
   personalabteilung: {
     absences: { view: true, edit: false },
@@ -66,6 +71,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     medicalAppointments: { view: true, edit: false },
     todos: { view: true, edit: false },
     trainings: { view: true, edit: false },
+    serviceMessages: { view: true, edit: false },
   },
   benutzer: {
     absences: { view: true, edit: false },
@@ -75,6 +81,7 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     medicalAppointments: { view: true, edit: false },
     todos: { view: true, edit: false },
     trainings: { view: true, edit: false },
+    serviceMessages: { view: true, edit: false },
   },
 };
 

@@ -34,6 +34,7 @@ function emptyForm() {
     timeFrom: '',
     timeTo: '',
     notes: '',
+    isNew: false,
     archived: false,
   };
 }
@@ -199,6 +200,7 @@ function TrainingsView() {
         timeFrom: form.timeFrom || '',
         timeTo: form.timeTo || '',
         notes: form.notes || '',
+        isNew: !!form.isNew,
         archived: form.archived || false,
         updatedAt: serverTimestamp(),
       };
@@ -226,6 +228,7 @@ function TrainingsView() {
       timeFrom: item.timeFrom || '',
       timeTo: item.timeTo || '',
       notes: item.notes || '',
+      isNew: !!item.isNew,
       archived: !!item.archived,
     });
     setShowForm(true);
@@ -515,6 +518,16 @@ function TrainingsView() {
                 onChange={handleChange}
               />
               Direkt als archiviert markieren
+            </label>
+
+            <label className="checkbox-label">
+              <input
+                name="isNew"
+                type="checkbox"
+                checked={!!form.isNew}
+                onChange={handleChange}
+              />
+              Schulung im Fahrdienst-Dashboard als NEU hervorheben
             </label>
 
             <div className="form-buttons">

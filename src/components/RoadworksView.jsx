@@ -37,6 +37,8 @@ function emptyForm() {
     endDate: '',
     status: 'angekündigt',
     notes: '',
+    isNew: false,
+    endingSoon: false,
     measures: {
       ersatzhaltestelle: false,
       fahrerinfo: false,
@@ -117,10 +119,10 @@ function RoadworksView() {
   }
 
   function handleChange(e) {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   }
 
@@ -157,6 +159,8 @@ function RoadworksView() {
         endDate: form.endDate,
         status: form.status,
         notes: form.notes || '',
+        isNew: !!form.isNew,
+        endingSoon: !!form.endingSoon,
         measures: form.measures || {
           ersatzhaltestelle: false,
           fahrerinfo: false,
@@ -277,6 +281,8 @@ function RoadworksView() {
         infoanzeiger: !!item.measures?.infoanzeiger,
         itcsUmleitung: !!item.measures?.itcsUmleitung,
       },
+      isNew: !!item.isNew,
+      endingSoon: !!item.endingSoon,
       archived: !!item.archived,
     });
     setShowForm(true);
@@ -656,6 +662,26 @@ function RoadworksView() {
                   ITCS Umleitung
                 </label>
               </fieldset>
+
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="isNew"
+                  checked={!!form.isNew}
+                  onChange={handleChange}
+                />
+                Eintrag im Fahrdienst-Dashboard als NEU hervorheben
+              </label>
+
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="endingSoon"
+                  checked={!!form.endingSoon}
+                  onChange={handleChange}
+                />
+                Baustelle endet in Kürze ("bald endend" im Fahrdienst-Dashboard)
+              </label>
 
               <div className="form-buttons">
                 <button type="submit">

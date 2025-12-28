@@ -32,6 +32,7 @@ const EMPTY_PERMISSIONS = {
   appointments: { view: true, edit: false },
   medicalAppointments: { view: true, edit: false },
   notices: { view: true, edit: false },
+   serviceMessages: { view: true, edit: false },
   todos: { view: true, edit: false },
   trainings: { view: true, edit: false },
 };
@@ -50,6 +51,8 @@ function labelForArea(area) {
       return 'Termine Betriebsarzt';
     case 'notices':
       return 'Dienstanweisungen & Aushänge';
+    case 'serviceMessages':
+      return 'Störungen & Infos';
     case 'todos':
       return 'To-Dos';
     case 'trainings':
@@ -282,6 +285,7 @@ function UserManagementView() {
                         'appointments',
                         'medicalAppointments',
                         'notices',
+                        'serviceMessages',
                         'todos',
                         'trainings',
                       ].map(

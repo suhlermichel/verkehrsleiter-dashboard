@@ -12,6 +12,8 @@ import TrainingsView from './components/TrainingsView.jsx';
 import UserManagementView from './components/UserManagementView.jsx';
 import KiAssistantView from './components/KiAssistantView.jsx';
 import LoginView from './components/LoginView.jsx';
+import ServiceMessagesView from './components/ServiceMessagesView.jsx';
+import FahrdienstDashboardView from './components/FahrdienstDashboardView.jsx';
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx';
 
 function AppShell() {
@@ -29,9 +31,11 @@ function AppShell() {
       const stored = window.localStorage.getItem('theme');
       if (stored === 'dark') return true;
       if (stored === 'light') return false;
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // Standardmäßig Dark-Theme nutzen, damit Optik näher am Fahrdienst-Dashboard ist.
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return true;
+      return true;
     } catch {
-      return false;
+      return true;
     }
   });
   const { firebaseUser, role, canView, signOut, loading } = useAuth();
@@ -169,6 +173,14 @@ function AppShell() {
             Dienstanweisungen & Aushänge
           </button>
         )}
+        {canView('serviceMessages') && (
+          <button
+            className={activeTab === 'serviceMessages' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('serviceMessages')}
+          >
+            Informationen Fahrer-Dashboard
+          </button>
+        )}
         {canView('todos') && (
           <button
             className={activeTab === 'todos' ? 'tab active' : 'tab'}
@@ -213,6 +225,7 @@ function AppShell() {
         <MedicalAppointmentsView />
       )}
       {activeTab === 'notices' && canView('notices') && <NoticesView />}
+      {activeTab === 'serviceMessages' && canView('serviceMessages') && <ServiceMessagesView />}
         {activeTab === 'todos' && canView('todos') && <TodosView />}
         {activeTab === 'trainings' && canView('trainings') && <TrainingsView />}
         {activeTab === 'assistant' && role === 'admin' && <KiAssistantView />}
@@ -222,7 +235,39 @@ function AppShell() {
   );
 }
 
+function FahrdienstShell() {
+  const { firebaseUser, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="fahrdienst-root">
+        <p>Lade Benutzerdaten...</p>
+      </div>
+    );
+  }
+
+  if (!firebaseUser) {
+    return (
+      <div className="fahrdienst-root">
+        <LoginView />
+      </div>
+    );
+  }
+
+  return <FahrdienstDashboardView />;
+}
+
 function App() {
+  const path = window.location.pathname || '/';
+
+  if (path === '/fahrdienst') {
+    return (
+      <AuthProvider>
+        <FahrdienstShell />
+      </AuthProvider>
+    );
+  }
+
   return (
     <AuthProvider>
       <AppShell />
