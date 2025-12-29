@@ -1434,8 +1434,15 @@ button:hover {
     font-size: 14px;
   }
 
-  .fahrdienst-alert-text {
-    animation-duration: 20s;
+  /* Auf dem Handy: Ticker nicht animiert darstellen, sondern
+   * als statischen, ggf. mehrzeiligen Text. */
+  .fahrdienst-alert-inner {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .fahrdienst-alert-track {
+    animation: none;
   }
 }
 
