@@ -1455,6 +1455,7 @@ button:hover {
     padding: 4px 14px;
     display: inline-block;
     white-space: normal;
+    text-align: center;
   }
 
   /* Zweite Kopie des Textes (für Desktop-Marquee) auf Handy ausblenden */
