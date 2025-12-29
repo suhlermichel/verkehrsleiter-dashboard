@@ -15,7 +15,6 @@ import { usePersistentSort } from '../hooks/usePersistentSort.js'; // Version 1.
 import RowActionsMenu from './RowActionsMenu.jsx'; // Version 1.7: 3-Punkte-Menü für Zeilenaktionen
 
 const ABSENCE_TYPES = ['kr', 'kru'];
-const ABSENCE_STATUS = ['eingetragen', 'verlängert'];
 
 function formatDate(value) {
   if (!value) return '';
@@ -36,6 +35,8 @@ function emptyForm() {
     endDate: '',
     returnDate: '',
     status: 'eingetragen',
+    isNew: false,
+    isExtended: false,
     hasPaperCertificate: false,
     enteredUntil: '',
     notes: '',
@@ -68,6 +69,24 @@ function AbsencesView() {
         const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
         setItems(data);
         setLoading(false);
+
+        // Migration: ältere Einträge, bei denen der Status noch "verlängert" lautet,
+        // auf den neuen Mechanismus umstellen: Status auf "eingetragen" setzen und
+        // isExtended aktivieren, damit die Verlängerung visuell über das Badge bleibt.
+        data
+          .filter((item) => item.status === 'verlängert')
+          .forEach((item) => {
+            try {
+              const ref = doc(db, 'absences', item.id);
+              updateDoc(ref, {
+                status: 'eingetragen',
+                isExtended: item.isExtended ?? true,
+                updatedAt: serverTimestamp(),
+              });
+            } catch {
+              // Migrationsfehler hier bewusst ignorieren; Datensatz bleibt dann unverändert.
+            }
+          });
       },
       (err) => {
         setError('Fehler beim Laden der Abwesenheiten: ' + err.message);
@@ -143,7 +162,9 @@ function AbsencesView() {
         startDate: form.startDate,
         endDate: form.endDate,
         returnDate: form.returnDate || '',
-        status: form.status,
+        status: form.status || 'eingetragen',
+        isNew: !!form.isNew,
+        isExtended: !!form.isExtended,
         hasPaperCertificate: form.hasPaperCertificate,
         enteredUntil: form.enteredUntil || '',
         notes: form.notes || '',
@@ -173,6 +194,8 @@ function AbsencesView() {
       endDate: item.endDate || '',
       returnDate: item.returnDate || '',
       status: item.status || 'eingetragen',
+      isNew: !!item.isNew,
+      isExtended: !!item.isExtended,
       hasPaperCertificate: !!item.hasPaperCertificate,
       enteredUntil: item.enteredUntil || '',
       notes: item.notes || '',
@@ -354,7 +377,15 @@ function AbsencesView() {
                     >
                       {item.hasPaperCertificate ? 'Ja' : 'Nein'}
                     </td>
-                    <td>{item.status}</td>
+                    <td>
+                      <span>{item.status || 'eingetragen'}</span>
+                      {item.isNew && (
+                        <span className="absence-badge absence-badge-new">NEU</span>
+                      )}
+                      {item.isExtended && !item.isNew && (
+                        <span className="absence-badge absence-badge-extended">VERLÄNGERT</span>
+                      )}
+                    </td>
                     <td
                       className="perdis-until-cell"
                       style={(() => {
@@ -455,16 +486,6 @@ function AbsencesView() {
                 onChange={handleChange}
               />
             </label>
-            <label>
-              Status
-              <select name="status" value={form.status} onChange={handleChange}>
-                {ABSENCE_STATUS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </label>
             <label className="checkbox-label">
               <input
                 name="hasPaperCertificate"
@@ -473,6 +494,24 @@ function AbsencesView() {
                 onChange={handleChange}
               />
               Krankenschein im Papierformat lag vor
+            </label>
+            <label className="checkbox-label">
+              <input
+                name="isNew"
+                type="checkbox"
+                checked={!!form.isNew}
+                onChange={handleChange}
+              />
+              Eintrag im Dashboard als NEU hervorheben
+            </label>
+            <label className="checkbox-label">
+              <input
+                name="isExtended"
+                type="checkbox"
+                checked={!!form.isExtended}
+                onChange={handleChange}
+              />
+              Eintrag im Dashboard als VERLÄNGERT hervorheben
             </label>
             <label>
               Im PERDIS eingetragen bis
@@ -582,7 +621,15 @@ function AbsencesView() {
                   >
                     {item.hasPaperCertificate ? 'Ja' : 'Nein'}
                   </td>
-                  <td>{item.status}</td>
+                  <td>
+                    <span>{item.status || 'eingetragen'}</span>
+                    {item.isNew && (
+                      <span className="absence-badge absence-badge-new">NEU</span>
+                    )}
+                    {item.isExtended && !item.isNew && (
+                      <span className="absence-badge absence-badge-extended">VERLÄNGERT</span>
+                    )}
+                  </td>
                   <td
                     className="perdis-until-cell"
                     style={(() => {

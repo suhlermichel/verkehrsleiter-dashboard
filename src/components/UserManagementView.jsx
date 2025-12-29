@@ -21,20 +21,21 @@ const ROLES = [
   'vertretung_verkehrsleiter',
   'ueberwachung',
   'personalabteilung',
+  'fahrer',
   'benutzer',
   'readonly',
 ];
 
 const EMPTY_PERMISSIONS = {
-  absences: { view: true, edit: false },
-  roadworks: { view: true, edit: false },
-  charter: { view: true, edit: false },
-  appointments: { view: true, edit: false },
-  medicalAppointments: { view: true, edit: false },
-  notices: { view: true, edit: false },
-   serviceMessages: { view: true, edit: false },
-  todos: { view: true, edit: false },
-  trainings: { view: true, edit: false },
+  absences: { view: false, edit: false },
+  roadworks: { view: false, edit: false },
+  charter: { view: false, edit: false },
+  appointments: { view: false, edit: false },
+  medicalAppointments: { view: false, edit: false },
+  notices: { view: false, edit: false },
+  serviceMessages: { view: false, edit: false },
+  todos: { view: false, edit: false },
+  trainings: { view: false, edit: false },
 };
 
 function labelForArea(area) {
@@ -52,7 +53,7 @@ function labelForArea(area) {
     case 'notices':
       return 'Dienstanweisungen & Aushänge';
     case 'serviceMessages':
-      return 'Störungen & Infos';
+      return 'Informationen Fahrer-Dashboard';
     case 'todos':
       return 'To-Dos';
     case 'trainings':
@@ -115,8 +116,8 @@ function UserManagementView() {
       return;
     }
 
-    if (users.length >= 6) {
-      setError('Es sind bereits 6 Benutzer angelegt. Mehr sind nicht erlaubt.');
+    if (users.length >= 50) {
+      setError('Es sind bereits 50 Benutzer angelegt. Mehr sind nicht erlaubt.');
       return;
     }
 

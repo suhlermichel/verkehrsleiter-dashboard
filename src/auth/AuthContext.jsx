@@ -73,6 +73,17 @@ const DEFAULT_PERMISSIONS_BY_ROLE = {
     trainings: { view: true, edit: false },
     serviceMessages: { view: true, edit: false },
   },
+  fahrer: {
+    absences: { view: false, edit: false },
+    roadworks: { view: false, edit: false },
+    charter: { view: false, edit: false },
+    appointments: { view: false, edit: false },
+    medicalAppointments: { view: false, edit: false },
+    todos: { view: false, edit: false },
+    trainings: { view: false, edit: false },
+    notices: { view: false, edit: false },
+    serviceMessages: { view: false, edit: false },
+  },
   benutzer: {
     absences: { view: true, edit: false },
     roadworks: { view: true, edit: false },
