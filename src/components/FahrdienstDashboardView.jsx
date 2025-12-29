@@ -189,9 +189,9 @@ function FahrdienstDashboardView() {
         </div>
         <div className="fahrdienst-header-right">
           <div className="fahrdienst-header-datetime">
-            <span>{headerTime}</span>
-            <span>{headerDate}</span>
             <span>{headerKw}</span>
+            <span>{headerDate}</span>
+            <span>{headerTime}</span>
           </div>
           <img src="/sng-logo.png" alt="SNG Logo" className="fahrdienst-logo" />
         </div>
@@ -210,7 +210,7 @@ function FahrdienstDashboardView() {
         <section>
           <div className="fahrdienst-panel fahrdienst-panel-weather">
               <h2>
-                🌦️ Wetter für Suhl &amp; Zella-Mehlis
+                🌦️ Wetter für Suhl
                 {weatherUpdatedTime && (
                   <span className="fahrdienst-weather-updated">aktualisiert um {weatherUpdatedTime}</span>
                 )}

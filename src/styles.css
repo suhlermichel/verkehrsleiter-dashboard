@@ -1400,7 +1400,7 @@ button:hover {
   .fahrdienst-header-right {
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     align-items: center;
     gap: 4px;
     font-size: 12px;
@@ -1434,7 +1434,7 @@ button:hover {
   }
 
   .fahrdienst-alert-text {
-    animation-duration: 24s;
+    animation-duration: 36s;
   }
 }
 
