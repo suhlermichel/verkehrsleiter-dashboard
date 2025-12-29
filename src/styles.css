@@ -1387,24 +1387,28 @@ button:hover {
 @media (max-width: 640px) {
   .fahrdienst-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 6px;
     padding: 8px 12px;
   }
 
   .fahrdienst-header-left h1 {
+    text-align: center;
     font-size: 22px;
   }
 
   .fahrdienst-header-right {
     width: 100%;
-    justify-content: space-between;
-    gap: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     font-size: 12px;
   }
 
   .fahrdienst-header-datetime {
     gap: 8px;
+    justify-content: center;
   }
 
   .fahrdienst-header-datetime span:nth-child(1) {
@@ -1422,6 +1426,15 @@ button:hover {
 
   .fahrdienst-logo {
     height: 28px;
+  }
+
+  .fahrdienst-alert-bar {
+    padding: 4px 12px;
+    font-size: 14px;
+  }
+
+  .fahrdienst-alert-text {
+    animation-duration: 24s;
   }
 }
 
