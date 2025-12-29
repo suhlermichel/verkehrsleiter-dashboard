@@ -1075,6 +1075,13 @@ button:hover {
   display: inline-block;
 }
 
+/* Desktop/Standard: nur die Loop-Variante anzeigen, damit die Marquee-
+ * Animation für alle Desktop-Breiten stabil läuft. Die Single-Variante
+ * wird nur für die mobile, statische Anzeige genutzt. */
+.fahrdienst-alert-text-single {
+  display: none;
+}
+
 @keyframes fahrdienst-ticker {
   0% {
     transform: translateX(0%);
