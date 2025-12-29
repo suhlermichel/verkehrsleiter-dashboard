@@ -176,10 +176,11 @@ function FahrdienstDashboardView() {
     const spacer = '\u00A0\u00A0\u00A0\u00A0\u00A0+++\u00A0\u00A0\u00A0\u00A0\u00A0';
     alertBaseText = tickerParts.join(spacer);
   }
-  // Auch zwischen den Wiederholungen denselben Abstand verwenden
-  const repeatSpacer = '\u00A0\u00A0\u00A0\u00A0\u00A0+++\u00A0\u00A0\u00A0\u00A0\u00A0';
-  const singleTickerChunk = `${alertBaseText}${repeatSpacer}`;
-  const tickerText = singleTickerChunk;
+  // Für die Handy-Ansicht reicht ein einfacher Text ohne zusätzliche Wiederholung.
+  const tickerTextSingle = alertBaseText;
+  // Für die Desktop-Animation den Text einmal wiederholen, getrennt durch +++.
+  const loopSpacer = '\u00A0\u00A0\u00A0\u00A0\u00A0+++\u00A0\u00A0\u00A0\u00A0\u00A0';
+  const tickerTextLoop = `${alertBaseText}${tickerParts.length > 0 ? loopSpacer + alertBaseText : ''}`;
 
   return (
     <div className="fahrdienst-root">
@@ -199,8 +200,8 @@ function FahrdienstDashboardView() {
       <div className="fahrdienst-alert-bar">
         <div className="fahrdienst-alert-inner">
           <div className="fahrdienst-alert-track">
-            <span className="fahrdienst-alert-text">{tickerText}</span>
-            <span className="fahrdienst-alert-text">{tickerText}</span>
+            <span className="fahrdienst-alert-text fahrdienst-alert-text-single">{tickerTextSingle}</span>
+            <span className="fahrdienst-alert-text fahrdienst-alert-text-loop">{tickerTextLoop}</span>
           </div>
         </div>
       </div>
