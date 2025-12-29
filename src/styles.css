@@ -1077,10 +1077,10 @@ button:hover {
 
 @keyframes fahrdienst-ticker {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0%);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
@@ -1432,17 +1432,34 @@ button:hover {
   .fahrdienst-alert-bar {
     padding: 4px 12px;
     font-size: 14px;
+    background: transparent;
+    border-bottom: none;
   }
 
-  /* Auf dem Handy: Ticker nicht animiert darstellen, sondern
-   * als statischen, ggf. mehrzeiligen Text. */
+  /* Auf dem Handy: statischer, abgerundeter Hinweis-Balken
+   * ähnlich wie die Wetter-Warnung. */
   .fahrdienst-alert-inner {
     overflow: visible;
     white-space: normal;
+    display: flex;
+    justify-content: center;
   }
 
   .fahrdienst-alert-track {
     animation: none;
+  }
+
+  .fahrdienst-alert-text {
+    background: #b91c1c;
+    border-radius: 999px;
+    padding: 4px 14px;
+    display: inline-block;
+    white-space: normal;
+  }
+
+  /* Zweite Kopie des Textes (für Desktop-Marquee) auf Handy ausblenden */
+  .fahrdienst-alert-track .fahrdienst-alert-text:last-child {
+    display: none;
   }
 }
 
