@@ -287,7 +287,7 @@ function FahrdienstDashboardView() {
 
         <section>
           <div className="fahrdienst-panel fahrdienst-panel-traffic">
-            <h2>🚧 Verkehrsinformationen</h2>
+            <h2>🚧 Verkehrsinfo</h2>
             <ul className="fahrdienst-list">
               {activeRoadworks.map((r) => (
                 <li key={r.id} className="fahrdienst-list-item">
@@ -325,7 +325,7 @@ function FahrdienstDashboardView() {
 
         <section>
           <div className="fahrdienst-panel fahrdienst-panel-disturbances">
-              <h2>🚨 Aktuelle Informationen</h2>
+              <h2>🚨 Aktuelles</h2>
               <ul className="fahrdienst-list">
                 {disturbances.map((m) => (
                   <li key={m.id} className="fahrdienst-list-item">
@@ -352,7 +352,7 @@ function FahrdienstDashboardView() {
 
         <section>
           <div className="fahrdienst-panel fahrdienst-panel-info">
-              <h2>📝 Organisatorische Informationen</h2>
+              <h2>📝 Organisatorisches</h2>
               <ul className="fahrdienst-list">
                 {infoMessages.map((m) => (
                   <li key={m.id} className="fahrdienst-list-item">
@@ -373,7 +373,7 @@ function FahrdienstDashboardView() {
 
         <section>
           <div className="fahrdienst-panel fahrdienst-panel-trainings">
-            <h2>📚 Anstehende Schulungen</h2>
+            <h2>📚 Schulungen</h2>
             <ul className="fahrdienst-list">
               {upcomingTrainings.map((t) => (
                 <li key={t.id} className="fahrdienst-list-item">
