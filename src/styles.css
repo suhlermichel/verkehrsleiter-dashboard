@@ -1048,23 +1048,8 @@ button:hover {
   align-items: baseline;
 }
 
-.fahrdienst-header-datetime span:nth-child(1) {
-  font-size: 26px;
-  font-weight: 600;
-}
-
-.fahrdienst-header-datetime span:nth-child(2) {
-  font-size: 18px;
-}
-
-.fahrdienst-header-datetime span:nth-child(3) {
-  font-size: 20px;
-  font-weight: 700;
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1px solid #facc15;
-  background: rgba(250, 204, 21, 0.1);
-}
+/* frühere nth-child-Stile für Datum/Uhrzeit wurden durch
+ * spezifische Klassen ersetzt (fahrdienst-datetime-kw/date/time). */
 
 .fahrdienst-alert-bar {
   background: #b91c1c;
@@ -1083,11 +1068,11 @@ button:hover {
 
 .fahrdienst-alert-track {
   display: inline-flex;
+  animation: fahrdienst-ticker 20s linear infinite;
 }
 
 .fahrdienst-alert-text {
   display: inline-block;
-  animation: fahrdienst-ticker 12s linear infinite;
 }
 
 @keyframes fahrdienst-ticker {
@@ -1384,6 +1369,26 @@ button:hover {
   font-weight: 600;
 }
 
+/* Fahrdienst-Header: explizite Klassen für KW, Datum, Uhrzeit,
+ * damit die Kalenderwoche hervorgehoben werden kann. */
+.fahrdienst-header-datetime .fahrdienst-datetime-kw {
+  font-size: 22px;
+  font-weight: 700;
+  padding: 2px 12px;
+  border-radius: 999px;
+  border: 1px solid #facc15;
+  background: rgba(250, 204, 21, 0.15);
+}
+
+.fahrdienst-header-datetime .fahrdienst-datetime-date {
+  font-size: 18px;
+}
+
+.fahrdienst-header-datetime .fahrdienst-datetime-time {
+  font-size: 18px;
+  font-weight: 500;
+}
+
 @media (max-width: 640px) {
   .fahrdienst-header {
     flex-direction: column;
@@ -1411,21 +1416,17 @@ button:hover {
     justify-content: center;
   }
 
-  .fahrdienst-header-datetime span:nth-child(1) {
-    font-size: 20px;
+  .fahrdienst-header-datetime .fahrdienst-datetime-kw {
+    font-size: 18px;
+    padding: 1px 10px;
   }
 
-  .fahrdienst-header-datetime span:nth-child(2) {
+  .fahrdienst-header-datetime .fahrdienst-datetime-date {
     font-size: 14px;
   }
 
-  .fahrdienst-header-datetime span:nth-child(3) {
-    font-size: 16px;
-    padding: 1px 8px;
-  }
-
-  .fahrdienst-logo {
-    height: 28px;
+  .fahrdienst-header-datetime .fahrdienst-datetime-time {
+    font-size: 14px;
   }
 
   .fahrdienst-alert-bar {
@@ -1434,7 +1435,7 @@ button:hover {
   }
 
   .fahrdienst-alert-text {
-    animation-duration: 36s;
+    animation-duration: 20s;
   }
 }
 

@@ -189,11 +189,10 @@ function FahrdienstDashboardView() {
         </div>
         <div className="fahrdienst-header-right">
           <div className="fahrdienst-header-datetime">
-            <span>{headerKw}</span>
-            <span>{headerDate}</span>
-            <span>{headerTime}</span>
+            <span className="fahrdienst-datetime-kw">{headerKw}</span>
+            <span className="fahrdienst-datetime-date">{headerDate}</span>
+            <span className="fahrdienst-datetime-time">{headerTime}</span>
           </div>
-          <img src="/sng-logo.png" alt="SNG Logo" className="fahrdienst-logo" />
         </div>
       </header>
 
