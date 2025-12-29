@@ -179,7 +179,7 @@ function FahrdienstDashboardView() {
   // Auch zwischen den Wiederholungen denselben Abstand verwenden
   const repeatSpacer = '\u00A0\u00A0\u00A0\u00A0\u00A0+++\u00A0\u00A0\u00A0\u00A0\u00A0';
   const singleTickerChunk = `${alertBaseText}${repeatSpacer}`;
-  const tickerText = `${singleTickerChunk}${singleTickerChunk}${singleTickerChunk}${singleTickerChunk}`;
+  const tickerText = singleTickerChunk;
 
   return (
     <div className="fahrdienst-root">
